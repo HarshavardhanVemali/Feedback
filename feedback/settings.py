@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-
+import os
+import parse
+import dj_database_url
+from django.core.wsgi import get_wsgi_application
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,9 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-2n=ks6h*a185(uv)vjwo!f42mhj)$^@0w!^ms!we7q3jm=9os*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -51,7 +54,8 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     
 ]
-
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_NAME = 'feedbackapp_session'
 ROOT_URLCONF = 'feedback.urls'
 
 TEMPLATES = [
@@ -85,6 +89,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+DATABASES["default"]=dj_database_url.parse("postgresql://feedback_0zis_user:gYLKX0144kCP4oDbtfS8Jgd0vfAFD5Il@dpg-cqgk866ehbks738v1usg-a.oregon-postgres.render.com/feedback_0zis")
 
 
 # Password validation
