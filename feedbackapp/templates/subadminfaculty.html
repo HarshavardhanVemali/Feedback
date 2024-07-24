@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/adminfaculty.css' %}">
+    <title>MVGR(A) ADMIN</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
+</head>
+<body>
+<header>
+    <div id="college_title">
+        <div id="college_logo">
+            <a href="https://www.mvgrce.com/" target="_blank">
+                <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
+            </a>
+        </div>
+        <div id="college_sub_title">
+            <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+            <h1 id="title_name">Feedback Management</h1>
+        </div>
+    </div>
+    <div class="navbar-in-admin">
+        <ul>
+            <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
+            <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+            <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
+            <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
+        </ul>
+    </div>
+</header>
+<main>
+    <div class="subnav">
+        <div class="addbranches">
+            <button id="backbutton" onclick="window.location.href='{% url 'adminfaculty' %}'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                  <span>Back</span>
+            </button>
+            <button id="addbranchesbutton" onclick="showAddFacultyForm()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>Add Faculty</span>
+            </button>
+        </div>
+        <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
+            <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+        <div class="overlay">
+            <div id="addfacultyform-container" class="addfacultyform-container hidden">
+                <svg id="closebtn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="hideAddFacultyForm()">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                <form method="post" enctype="multipart/form-data" id="addfacultyform" action="{% url 'addfaculty' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="addfacultyform">
+                    <div id="form-row">
+                        <label for="facultyname">Name</label>
+                        <input type="text" name="facultyname" id="facultyname" placeholder="Name" required>
+                    </div>
+                    <div id="form-row">
+                        <label for="registernumber">Register Number</label>
+                        <input type="text" name="registernumber" id="registernumber" placeholder="Register Number" required>
+                    </div>
+                    <div id="form-row">
+                        <label for="department">Department</label>
+                        <select name="department" id="department" required>
+                        </select>
+                    </div>
+                    <div id="form-row">
+                        <label for="facultyimage">Photo</label>
+                        <input type="file" name="facultyimage" id="facultyimage">
+                    </div>
+                    <div class="button-container"> 
+                        <button type="submit" id="addfacultybutton">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="faculty">
+        <div class="departmentinformation">
+            
+        </div>
+        <div id="faculty-list">
+            <table id="facultytable">
+                <thead>
+                    <tr>
+                        <th>Register Number</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Image</th>
+                        <th>Save</th> 
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+<script>
+    function showAddFacultyForm() {
+    document.getElementById('addfacultyform-container').classList.remove('hidden');
+    document.querySelector('.overlay').classList.add('active');
+    }
+    function hideAddFacultyForm() {
+        document.getElementById('addfacultyform-container').classList.add('hidden');
+        document.querySelector('.overlay').classList.remove('active');
+    }
+    function getfaculty() {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const departmentCode = urlParams.get('dept_code');
+        fetch('/getfaculty/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ department_code: departmentCode })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const facultyList = document.getElementById('faculty-list');
+            const departmentName = data.department_name;
+            const departmentImage=data.department_image;
+            const departmentInformation=document.querySelector('.departmentinformation');
+            const selectDepartment=document.getElementById('department');
+            const option = document.createElement('option');
+                option.value = departmentCode;
+                option.text = `${data.department_name}`;
+                option.selected=true;
+                selectDepartment.add(option);
+            departmentInformation.innerHTML = `
+                ${departmentImage
+                ? `<img src="${departmentImage}" alt="${departmentName} Logo">`
+                : '<span class="no-image">N/A</span>'}
+                <p>Faculty of ${departmentName}</p>
+            `;
+            const facultyTableBody = document.querySelector('#facultytable tbody');
+            facultyTableBody.innerHTML='';
+            if (data.faculty.length === 0) {
+                const noFacultyRow = document.createElement('tr');
+                const noFacultyCell = document.createElement('td');
+                noFacultyCell.setAttribute('colspan', 6);
+                noFacultyCell.textContent = 'No faculty found in this department.';
+                noFacultyRow.appendChild(noFacultyCell);
+                facultyTableBody.appendChild(noFacultyRow);
+            } else {
+                data.faculty.forEach(faculty => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${faculty.facultyid}</td>
+                        <td contenteditable="true" id="faculty_name_${faculty.facultyid}" style="overflow-x:scroll;max-width:150px;">${faculty.name}</td>
+                        <td>${faculty.departmentname} (${faculty.departmentcode})</td>
+                        <td>${faculty.img ? `<img src="${faculty.img}" alt="${faculty.name}">` : 'Image N/A'}</td>
+                        <td><button class="save-button" onclick="savefacultyChanges('${faculty.facultyid}')">Save</button></td> 
+                        <td><button class="delete-button" onclick="deleteDepartment('${faculty.facultyid}')">
+                            <svg style="margin-right: 3px;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="h-5 w-5 shrink-0">
+                            <path fill="currentColor" fill-rule="evenodd" d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1" clip-rule="evenodd"></path>
+                        </svg>Delete</button></td> 
+                    `;
+                    facultyTableBody.appendChild(row);
+                    
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching faculty:', error);
+        });
+    }
+    document.getElementById('addfacultyform').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: form.method,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Faculty added successfully.');
+                form.reset();
+                document.querySelector('.overlay').classList.remove('active');
+                getfaculty();
+            } else {
+                alert('Failed to add Faculty: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error adding faculty:', error);
+            alert('Error adding faculty Please try again later.');
+        });
+    });
+    function redirectToFacultyPage(departmentCode) {
+        window.location.href = `/subadminfaculty.html?dept_code=${departmentCode}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        getfaculty();
+
+    });
+    function savefacultyChanges(facultyId) {
+    const facultyNameElement = document.getElementById(`faculty_name_${facultyId}`);
+    const FacultyName = facultyNameElement.textContent.trim();
+    if (FacultyName === "") {
+        alert("Faculty name must be filled out");
+        getfaculty();
+        return;
+    }
+    fetch('/savefacultychanges/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ faculty_id: facultyId, faculty_name: FacultyName })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if(data.success){
+            alert('Changes saved successfully');
+            getfaculty();
+        }
+        else{
+            alert('Unable to save changes.');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving changes:', error);
+        alert('Error saving changes. Please try again later.');
+    });
+    }
+    function deleteDepartment(facultyId){
+        fetch('/deletefaculty/',{
+            method:'POST',
+            headers:{
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body:JSON.stringify({faculty_id:facultyId})
+        })
+        .then(response=>{
+            if(!response.ok){
+                throw new Error('Network response was not ok.');
+            }
+            return response.json();
+        })
+        .then(data=>{
+            if(data.success){
+                alert('Deleted Successfully.');
+                getfaculty();
+            }
+            else{
+                alert('Failed to delete.');
+            }
+        })
+        .catch(error=>{
+            console.error('Error saving changes:', error);
+            alert('Error saving changes. Please try again later.');
+        });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        getfaculty();
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+</body>
+</html>

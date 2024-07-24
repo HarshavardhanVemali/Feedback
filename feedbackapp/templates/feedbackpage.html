@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <title>MVGR(A) Feedback Portal</title>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/college_logo.png' %}"> 
+    <style>
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db; 
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto; 
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #feedback-content { 
+            display: none; 
+        }
+        .background-stars {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    .star {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        background-color: white;
+        border-radius: 50%;
+        opacity: 0;
+        animation: twinkle 3s infinite alternate; /* More natural twinkle */
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Glow effect */
+    }
+
+    /* Different star sizes */
+    .star:nth-child(-n+10) { 
+        width: 3px; 
+        height: 3px; 
+    }
+
+    .star:nth-child(n+11):nth-child(-n+20) { 
+        width: 2px;
+        height: 2px;
+    }
+
+    @keyframes twinkle {
+        0% { 
+            opacity: 0; 
+            transform: scale(0.8); /* Add scaling for a subtle pulse */
+        }
+        100% { 
+            opacity: 1; 
+            transform: scale(1); 
+        }
+    }
+    
+    </style>
+</head>
+<body>
+    <div id="college_title_feedback">
+        <div id="college_logo_feedback">
+            <a href="https://www.mvgrce.com/" target="_blank">
+                <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
+            </a>
+        </div>
+        <div id="college_sub_title_feedback">
+            <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+            <h1 id="title_name_feedback">Feedback Management</h1>
+        </div>
+    </div>
+    <main>
+        <div class="subject-details"></div>
+        <div id="feedback-content">
+            <div class="loadquestions"></div>
+
+            <div class="comments-section"> 
+                <h2>Additional Comments (Optional)</h2>
+                <textarea id="comments" placeholder="Enter your comments here..."></textarea>
+            </div>
+            <div id="submitfeedbackbtn"> 
+                <button id="submit-feedback" onclick="submitFeedback()">Submit Feedback</button>
+            </div>
+        </div>
+        <div class="loading-spinner"></div> 
+        <div class="background-stars"></div>
+    </main>
+     
+</body>
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script> <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        getQuestions();
+        getSubjectDetails();
+        createStars();
+    });
+    function createStars() {
+        const starContainer = document.querySelector('.background-stars');
+        const numberOfStars = 200; 
+
+        for (let i = 0; i < numberOfStars; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            star.style.top = `${Math.random() * 100}%`; 
+            star.style.left = `${Math.random() * 100}%`; 
+            star.style.animationDelay = `${Math.random() * 3}s`; 
+
+            starContainer.appendChild(star);
+        }
+    }
+    function getSubjectDetails() {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const subjectCode = urlParams.get('subject_code');
+        const studentId = urlParams.get('student_id');
+
+        fetch('/getsubjectdetails/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                subject_code: subjectCode,
+                student_id: studentId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const subjectDetailsDiv = document.querySelector('.subject-details');
+
+            if (data.success) {
+                subjectDetailsDiv.innerHTML = `
+                    <h2>${data.subject_name}</h2>
+                `;
+            } else {
+                subjectDetailsDiv.innerHTML = `<p>${data.error}</p>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching subject details:', error);
+        });
+    }
+
+    function getQuestions() {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const subjectCode = urlParams.get('subject_code');
+        const studentId = urlParams.get('student_id');
+
+        fetch('/getquestionsforfeedback/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                subject_code: subjectCode,
+                student_id: studentId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const loadQuestionsDiv = document.querySelector('.loadquestions');
+            const loadingSpinner = document.querySelector('.loading-spinner'); 
+            const feedbackContent = document.getElementById('feedback-content'); 
+
+            if (data.success) {
+                const questions = data.questions;
+
+                setTimeout(() => {
+                    loadingSpinner.style.display = 'none'; 
+                    feedbackContent.style.display = 'block'; 
+
+                    questions.forEach((question, index) => {
+                        const questionWrapperDiv = document.createElement('div');
+                        questionWrapperDiv.classList.add('question-wrapper');
+                        const questionDiv = document.createElement('div');
+                        questionDiv.classList.add('question');
+                        questionDiv.innerHTML = `
+                            <h2>Q${question.question_number}. ${question.question_text}</h2>
+                        `;
+                        questionWrapperDiv.appendChild(questionDiv);
+
+                        const optionsDiv = document.createElement('div');
+                        optionsDiv.classList.add('options');
+                        question.options.forEach(option => {
+                            const optionItem = document.createElement('div');
+                            optionItem.innerHTML = `
+                                <input type="radio" name="question${question.question_number}" value="${option.option_number}">
+                                <label>${option.option_text}</label>
+                            `;
+                            optionsDiv.appendChild(optionItem);
+                        });
+                        questionWrapperDiv.appendChild(optionsDiv);
+
+                        loadQuestionsDiv.appendChild(questionWrapperDiv);
+                        questionWrapperDiv.style.display = 'block';
+                    });
+                }, 500); 
+
+            } else {
+                loadingSpinner.style.display = 'none'; 
+                loadQuestionsDiv.innerHTML = `<p>${data.error}</p>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching questions:', error);
+            alert('An error occurred while fetching questions.');
+        });
+    }
+
+    function submitFeedback() {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const subjectCode = urlParams.get('subject_code');
+        const studentId = urlParams.get('student_id');
+        const questions = document.querySelectorAll('.question-wrapper');
+        const selectedAnswers = {}; 
+        let allQuestionsAnswered = true;
+        const comments = document.getElementById('comments').value;
+        questions.forEach(questionDiv => {
+            const questionNumber = questionDiv.querySelector('.question h2').textContent.split('.')[0].replace('Q', '');
+            const selectedOption = questionDiv.querySelector(`input[name="question${questionNumber}"]:checked`);
+
+            if (selectedOption) {
+                selectedAnswers[questionNumber] = selectedOption.value;
+            } else {
+                allQuestionsAnswered = false; 
+            }
+        });
+
+        if (allQuestionsAnswered) {
+            fetch('/submitfeedback/', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ 
+                    subject_code: subjectCode,
+                    student_id: studentId,
+                    selectedAnswers: selectedAnswers ,
+                    comments: comments
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/';
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting feedback:', error);
+                alert('An error occurred while submitting feedback.');
+            });
+        } else {
+            alert("Please answer all the questions before submitting.");
+        }
+    }
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+</html>

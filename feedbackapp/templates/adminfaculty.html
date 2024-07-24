@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/adminfaculty.css' %}">
+    <title>MVGR(A) ADMIN</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
+</head>
+<body>
+<header>
+    <div id="college_title">
+        <div id="college_logo">
+            <a href="https://www.mvgrce.com/" target="_blank">
+                <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
+            </a>
+        </div>
+        <div id="college_sub_title">
+            <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+            <h1 id="title_name">Feedback Management</h1>
+        </div>
+    </div>
+    <div class="navbar-in-admin">
+        <ul>
+            <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
+            <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+            <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
+            <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
+        </ul>
+    </div>
+</header>
+<main>
+    <div class="subnav">
+        <div class="addbranches">
+            <button id="addbranchesbutton" onclick="showAddFacultyForm()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>Add Faculty</span>
+            </button>
+        </div>
+        <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
+            <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+        <div class="overlay">
+            <div id="addfacultyform-container" class="addfacultyform-container hidden">
+                <svg id="closebtn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="hideAddFacultyForm()">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                <form method="post" enctype="multipart/form-data" id="addfacultyform" action="{% url 'addfaculty' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="addfacultyform">
+                    <div id="form-row">
+                        <label for="facultyname">Name</label>
+                        <input type="text" name="facultyname" id="facultyname" placeholder="Name" required>
+                    </div>
+                    <div id="form-row">
+                        <label for="registernumber">Register Number</label>
+                        <input type="text" name="registernumber" id="registernumber" placeholder="Register Number" required>
+                    </div>
+                    <div id="form-row">
+                        <label for="department">Department</label>
+                        <select name="department" id="department" required>
+                            <option value="">Select Department</option> 
+                        </select>
+                    </div>
+                    <div id="form-row">
+                        <label for="facultyimage">Photo</label>
+                        <input type="file" name="facultyimage" id="facultyimage">
+                    </div>
+                    <div class="button-container"> 
+                        <button type="submit" id="addfacultybutton">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="showdepartments">
+        <p>Departments</p>
+        <div id="departments"></div>
+    </div>
+</main>
+<script>
+    function showAddFacultyForm() {
+    document.getElementById('addfacultyform-container').classList.remove('hidden');
+    document.querySelector('.overlay').classList.add('active');
+    }
+    function hideAddFacultyForm() {
+        document.getElementById('addfacultyform-container').classList.add('hidden');
+        document.querySelector('.overlay').classList.remove('active');
+    }
+    function getdepartments() {
+        fetch('/getdepartments/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        }).then(response => response.json())
+        .then(data => {
+            const Department = document.querySelector('#departments');
+            const departmentSelect = document.getElementById('department');
+            Department.innerHTML = '';
+            departmentSelect.innerHTML = '';
+            data.forEach(department => {
+                const departmentdiv = document.createElement('div');
+                departmentdiv.className = 'department';   
+                departmentdiv.innerHTML = `
+                    <div class="image-name-group"> 
+                        ${department.logo ? `<img src="${department.logo}" alt="${department.name} Logo">` : '<span class="no-image">N/A</span>'}
+                        <span style="font-weight: 200">${department.name}</span>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18l6-6-6-6" />
+                    </svg>
+                `;
+                departmentdiv.addEventListener('click', () => {
+                    redirectToFacultyPage(department.code);
+                });
+                const option = document.createElement('option');
+                option.value = department.code;
+                option.text = `${department.name}`;
+                departmentSelect.add(option);
+                
+                Department.appendChild(departmentdiv);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching departments:', error);
+        });
+    }
+    document.getElementById('addfacultyform').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: form.method,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Faculty added successfully.');
+                form.reset();
+                document.querySelector('.overlay').classList.remove('active');
+                getdepartments();
+            } else {
+                alert('Failed to add Faculty: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error adding faculty:', error);
+            alert('Error adding faculty Please try again later.');
+        });
+    });
+    function redirectToFacultyPage(departmentCode) {
+        window.location.href = `/subadminfaculty.html?dept_code=${departmentCode}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        getdepartments();
+
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+</body>
+</html>

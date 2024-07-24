@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MVGR(A) Feedback Portal</title>
+    <link rel="stylesheet" href="{% static '/css/styles.css' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/college_logo.png' %}"> 
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"/>
+    <style>
+        body{
+        }
+        .showsubjects {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #subjects-list {
+            width: 90%;
+            text-align: center;
+        }
+
+        #subjects-container {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: linear-gradient(to right, #e3eec9, #f4f9f0, #ffffff, #f3f9f9, #e2f4e9);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease-in-out;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #subjects-container:hover {
+            background: linear-gradient(to right, #e6e9f0, #eef1f5);
+            transform: scale(1.03);
+        }
+
+        #subjects-container li {
+            color: #000;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.3s ease; 
+        }
+
+        #subjects-container li:hover {
+            background-color: #f2f2f2; 
+        }
+
+        #subjects-container li a {
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>  
+    <div id="college_title">
+        <div id="college_logo">
+            <a href="https://www.mvgrce.com/" target="_blank">
+                <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
+            </a>
+        </div>
+        <div id="college_sub_title">
+            <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+            <h1 id="dept_name">Department Of Data Engineering</h1>
+        </div>
+        <div id="department_logo">
+            <a href="" target="_parent">
+                <img src="{% static 'images/department_logo.png' %}" alt="college_logo">
+            </a>
+        </div>
+    </div>
+    {% if faculty_name %}
+    <div class="subnavbar">
+        <div class="headingtext">
+            <p id="plain-text">Hello, <p id="gradiant-text">{{faculty_name}}</p></p>
+        </div>
+        <div class="profile">
+            <svg class="profile-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" onclick="toggleProfile()">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="8.5" cy="7" r="4" fill="black" />
+            </svg>
+            <div id="profile-details">
+                <div class="profile-links" id="profileofuser" onclick="loadUserProfile()">
+                    <span>Profile</span>
+                </div>
+                <div id="student-profile-details"></div> 
+                <div class="profile-links" onclick="developerprofile()">
+                    <span>Developer Profile</span>
+                </div>
+                <div class="profile-links" id="logout-button" onclick="window.location.href='{% url 'facultylogout' %}'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span>Logout</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="profile-overlay" class="overlay hidden">
+        <div class="overlay-content">
+            <div id="profile-info"></div>
+            <button id="close-overlay" onclick="closeOverlay()">Close</button>
+        </div>
+    </div>
+    <div class="showsubjects">
+        <div id="subjects-list">
+            <h2>Your Subjects</h2>
+            <ul id="subjects-container">
+                </ul>
+        </div>
+    </div>
+    {% endif %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            getsubjectsoffaculty();
+            const subjectsContainer = document.getElementById('subjects-container');
+            subjectsContainer.addEventListener('click', (event) => {
+                if (event.target.tagName === 'LI') {
+                    const link = event.target.querySelector('a');
+                    window.location.href = link.href;
+                }
+            });
+        });
+        let register_number = "{{register_number}}";
+        function getsubjectsoffaculty() {
+            fetch('/getsubjectsoffaculty/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const subjectsContainer = document.getElementById('subjects-container');
+                    data.subjects.forEach(subject => {
+                        const subjectItem = document.createElement('li');
+                        const subjectLink = document.createElement('a');
+                        subjectLink.href = `{% url 'facultyfeedbackofsubject' %}?subject_code=${subject.subject_code}&year_of_study=${subject.studying_year}&section_number=${subject.section_number}&branch_code=${subject.branch_code}`;
+                        subjectLink.textContent = `${subject.subject_name} (${subject.section_name}) (${subject.branch_name}) (${subject.studying_year_name})`;
+
+                        const svgIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                        svgIcon.setAttribute("width", "24");
+                        svgIcon.setAttribute("height", "24");
+                        svgIcon.setAttribute("viewBox", "0 0 24 24");
+                        svgIcon.setAttribute("fill", "none");
+                        svgIcon.setAttribute("stroke", "currentColor");
+                        svgIcon.setAttribute("stroke-width", "2");
+                        svgIcon.setAttribute("stroke-linecap", "round");
+                        svgIcon.setAttribute("stroke-linejoin", "round");
+                        const svgPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        svgPath.setAttribute("d", "M9 18l6-6-6-6");
+                        svgIcon.appendChild(svgPath);
+
+                        subjectItem.appendChild(subjectLink);
+                        subjectItem.appendChild(svgIcon);
+                        subjectsContainer.appendChild(subjectItem);
+                    });
+                })
+                .catch(error => {
+                    console.log('error in fetching subjects', error)
+                });
+        }
+        let isProfileOpen = false;
+        const profileDetails = document.getElementById('profile-details');
+        const profileImage = document.querySelector('.profile-icon');
+        const profileLink = document.querySelector('.profile-links span');
+        function toggleProfile() {
+            isProfileOpen = !isProfileOpen;
+            profileDetails.style.display = isProfileOpen ? 'block' : 'none';
+        }
+        document.addEventListener('click', (event) => {
+            if (!profileDetails.contains(event.target) && event.target !== profileImage && isProfileOpen) {
+                isProfileOpen = false;
+                profileDetails.style.display = 'none';
+            }
+        });
+        function developerprofile() {
+            window.open('https://harshavardhanvemali.netlify.app', '_blank');
+        }
+        function showOverlay() {
+            const overlay = document.getElementById('profile-overlay');
+            overlay.classList.remove('hidden');
+        }
+        function closeOverlay() {
+            const overlay = document.getElementById('profile-overlay');
+            overlay.classList.add('hidden');
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+</script>
+</html>

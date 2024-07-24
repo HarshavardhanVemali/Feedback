@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/adminstudent.css' %}">
+    <title>MVGR(A) ADMIN</title>
+    <link
+    href="https://unpkg.com/aos@2.3.1/dist/aos.css"
+    rel="stylesheet"
+  />
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/college_logo.png' %}"> 
+</head>
+<body>
+    <header>
+        <div id="college_title">
+            <div id="college_logo">
+                <a href="https://www.mvgrce.com/" target="_blank">
+                    <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
+                </a>
+            </div>
+            <div id="college_sub_title">
+                <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+                <h1 id="title_name">Feedback Management</h1>
+            </div>
+        </div>
+        <div class="navbar-in-admin">
+            <ul>
+                <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
+                <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+                <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
+                <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
+            </ul>
+        </div>
+    </header>
+    <main>
+        <div class="subnavlinks">
+            <button id="students-container" onclick="toggleContent('students')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="8.5" cy="7" r="4"></circle>
+                </svg>
+                <span>Students</span>
+            </button>
+            <button id="subjects-container" onclick="toggleContent('subjects')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book-open">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                  </svg>
+                <span>Subjects</span>
+            </button>
+            <button id="seefeedback-container" onclick="toggleContent('feedbacks')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                <span>See Feedback</span>
+            </button>
+        </div>
+        <div class="students-container" id="students-content">
+            <div class="subnav">
+                <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
+                    <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+            <div class="addstudentsnavbar">
+                <div class="addsingleuser">
+                    <button id="addsingleuser" onclick="showAddsingleForm()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span>Add Single Student</span>
+                    </button>
+                </div>
+                <div class="addmultipleusers">
+                    <button id="addmultipleusers" onclick="showAddmultipleForm()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span>Add Multiple Students</span>
+                    </button>
+                </div>
+                <div class="search">
+                    <input type="text" placeholder="Name/Register number...">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+            </div>
+    
+            <div class="overlay-container"> 
+                <div id="addsingleuserform-container" class="form-container hidden">
+                    <svg id="closebtn" class="close-btn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="hideAddForms()">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    <form method="post" id="addsingleusersform" action="{% url 'addsingleuser' %}"> 
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="addsingleusersform">
+                        <div class="form-row">
+                            <label for="studentname">Student Name:</label>
+                            <input type="text" name="studentname" id="studentname" placeholder="Student Name" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="registernumber">Register Number:</label>
+                            <input type="text" name="registernumber" id="registernumber" placeholder="Register Number" required>
+                        </div>
+                        <div class="button-container"> 
+                            <button type="submit" id="addsingleuserbutton">Add</button>
+                        </div>
+                    </form>
+                </div>
+    
+                <div id="addmultipleuserform-container" class="form-container hidden">
+                    <svg id="closebtn" class="close-btn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="hideAddForms()">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    <form method="post" id="addmultipleusersform" action="{% url 'addmultipleusers' %}"> 
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="addmultipleusersform">
+                        <div class="form-row">
+                            <label for="sequencenumber">Sequence Number</label>
+                            <input type="text" name="sequencenumber" id="sequencenumber" placeholder="Ex: 22331A47" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="startingnumber">Starting Number</label>
+                            <input type="number" name="startingnumber" id="startingnumber" placeholder="Ex: 01" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="endingnumber">Ending Number</label>
+                            <input type="number" name="endingnumber" id="endingnumber" placeholder="Ex: 66" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="studentnames">Student Names</label> 
+                            <textarea name="studentnames" id="studentnames" placeholder="Student Names"  required></textarea>
+                        </div>
+                        <div class="button-container"> 
+                            <button type="submit" id="addmultipleuserbutton">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="showstudents">
+                <div class="studentstablecontainer">
+                    <table id="studentstable">
+                        <thead>
+                            <th>Register Number</th>
+                            <th>Name</th>
+                            <th>Year</th>
+                            <th>Department</th>
+                            <th>Branch</th>
+                            <th>Section</th>
+                            <th></th>
+                            <th></th>
+                        </thead>
+                        <tbody>
+    
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="subjects-container" id="subjects-content">
+            <div class="subnav">
+                <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
+                    <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>  
+            </div>
+            <div class="addsubjectnavbar">
+                <form method="post" id="addsubjectform" action="{% url 'addsubject' %}"> 
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="addsubjectform">
+                    <div class="form-column"> 
+                        <div class="form-column">
+                            <label for="subjectname">Subject Name</label>
+                            <input type="text" name="subjectname" id="subjectname" placeholder="Subject Name" required>
+                        </div>
+                        <div class="form-column">
+                            <label for="subjectcode">Subject Code</label>
+                            <input type="text" name="subjectcode" id="subjectcode" placeholder="Subject Code" required>
+                        </div>
+                        <div class="form-column">
+                            <label for="facultydepartment">Faculty-Department</label>
+                            <select name="facultydepartment" id="facultydepartment" required>
+                                <option value="" disabled selected>Select Department</option>
+                            </select>
+                        </div>
+                        <div class="form-column">
+                            <label for="faculty">Faculty</label>
+                            <select name="faculty" id="faculty" required>
+                                <option value="" disabled selected>Select Faculty</option>
+                            </select>
+                        </div>
+                        <div class="form-column button-column"> 
+                            <button type="submit" id="addsubjectbutton">Add</button>
+                        </div>       
+                    </div>
+                </form>
+            </div>
+            <div class="showsubjects">
+                
+                <div class="activate-examination" style="display: flex; justify-content: center;gap: 20px;align-items: center;">
+                    <div class="selectexams">
+                        <select name="exam" id="selectedexam">
+                            <option value="" disabled selected>Select Exam Questions</option>
+                        </select>
+                    </div>
+                    <div class="activate-examination" style="display: flex; justify-content: center; gap: 20px;">
+                        <div class="form-column" style="align-items: center; display: flex; justify-content: center; gap: 20px;">
+                          <div>
+                            <input type="radio" id="activateformid1" name="activateformid" value="1">
+                            <label for="activateformid1">Activate for Mid-1</label>
+                          </div>
+                          <div>
+                            <input type="radio" id="deactivateformid1" name="activateformid" value="-1">
+                            <label for="deactivateformid1">Deactivate for Mid-1</label>
+                          </div>
+                        </div>
+                        <div class="form-column" style="align-items: center; display: flex; justify-content: center; gap: 20px;">
+                          <div>
+                            <input type="radio" id="activateformid2" name="activateformid" value="2">
+                            <label for="activateformid2">Activate for Mid-2</label>
+                          </div>
+                          <div>
+                            <input type="radio" id="deactivateformid2" name="activateformid" value="-2">
+                            <label for="deactivateformid2">Deactivate for Mid-2</label>
+                          </div>
+                        </div>
+                        <button type="button" id="activateexamination" onclick="activatefeedback()">Update</button>
+                    </div>
+                </div>
+                <div class="subjectstablecontainer">
+                    <table id="subjectstable">
+                        <thead>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Faculty Department</th>
+                            <th>Faculty</th>
+                            <th>Save</th>
+                            <th>Delete</th>
+                        </thead>
+                        <tbody>
+    
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="seefeedback-container" id="seefeedback-content">
+            <div class="subnav">
+                <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
+                    <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+            <div class="getactivesubjects">
+
+            </div>
+        </div>
+    </main>
+    <script>
+        function showAddsingleForm() {
+            document.getElementById('addsingleuserform-container').classList.remove('hidden');
+            document.getElementById('addmultipleuserform-container').classList.add('hidden');
+            document.querySelector('.overlay-container').style.display = 'block';
+        }
+
+        function showAddmultipleForm() {
+            document.getElementById('addsingleuserform-container').classList.add('hidden');
+            document.getElementById('addmultipleuserform-container').classList.remove('hidden');
+            document.querySelector('.overlay-container').style.display = 'block'; 
+        }
+        function hideAddForms(){
+            document.getElementById('addmultipleuserform-container').classList.add('hidden');
+            document.getElementById('addsingleuserform-container').classList.add('hidden');
+            document.querySelector('.overlay-container').style.display='none';
+        }
+        function toggleContent(target) {
+            const studentsContent = document.getElementById('students-content');
+            const subjectsContent = document.getElementById('subjects-content');
+            const feedbackContent=document.getElementById('seefeedback-content');
+            if (target === 'students') {
+                studentsContent.style.display = 'block';
+                subjectsContent.style.display = 'none';
+                feedbackContent.style.display='none';
+            } else if (target === 'subjects') {
+                subjectsContent.style.display = 'block';
+                studentsContent.style.display = 'none';
+                feedbackContent.style.display='none';
+            } 
+            else if(target==='feedbacks'){ 
+                feedbackContent.style.display='block';
+                subjectsContent.style.display='none';
+                studentsContent.style.display='none';
+            }
+        }
+        window.onload = () => {
+            toggleContent('students'); 
+        };
+        let sectionNumber;
+        let branchCode;
+        let yearNumber;
+        document.addEventListener('DOMContentLoaded', () => {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            branchCode = urlParams.get('branch_code');
+            yearNumber = urlParams.get('year');
+            sectionNumber = urlParams.get('section_number');
+            getStudents();
+            getDepartments();
+            getsubjects();
+            getactivefeedbackexams();
+        });
+        function getDepartments() {
+            fetch('/getdepartments/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const departmentSelect = document.getElementById('facultydepartment');
+                data.forEach(department => {    
+                    const option = document.createElement('option');
+                    option.value = department.code;
+                    option.text = `${department.name}`;
+                    departmentSelect.add(option);
+                });
+                departmentSelect.addEventListener('change', getFaculty);
+            })
+            .catch(error => {
+                console.error('Error fetching departments:', error);
+            });
+        }
+        function getFaculty() {
+            departmentCode = document.getElementById('facultydepartment').value;
+            const facultySelect = document.getElementById('faculty');
+            facultySelect.innerHTML = '<option value="" disabled selected>Faculty</option>'; 
+            fetch('/getfaculty/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ department_code: departmentCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.faculty && data.faculty.length > 0) {
+                    data.faculty.forEach(faculty => {
+                        const option = document.createElement('option');
+                        option.value = faculty.facultyid;
+                        option.text = `${faculty.name}(${faculty.facultyid})`;
+                        facultySelect.add(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.text = "No Faculty Found";
+                    facultySelect.add(option);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching faculty:', error);
+            });
+        }
+        function getStudents() {
+            fetch('/getstudents/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ 
+                        branch_code: branchCode, 
+                        year_number: yearNumber, 
+                        section_number: sectionNumber 
+                    })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const studentTableBody = document.querySelector('#studentstable tbody');
+                studentTableBody.innerHTML = ''; 
+
+                if (data.students && data.students.length > 0) {
+                    data.students.forEach(student => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${student.student_id}</td> 
+                            <td contenteditable="true" id="student_name_${student.student_id}">${student.student_name}</td>
+                            <td>${student.studying_year}</td> 
+                            <td>${student.department}</td> 
+                            <td>${student.branch}</td> 
+                            <td>${student.section}</td> 
+                            <td><button onclick="savestudentchanges('${student.student_id}')" class="save-button">
+                                Save</button></td>
+                            <td>
+                                <button onclick="deletestudent('${student.student_id}')" class="delete-button">
+                                    <svg style="margin-right: 3px;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="h-5 w-5 shrink-0">
+                                        <path fill="currentColor" fill-rule="evenodd" d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </td>
+                        `;
+                        studentTableBody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="8">No students found.</td>';
+                    studentTableBody.appendChild(row);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching students:', error);
+            });
+        }
+        function getactivefeedbackexams() {
+            fetch('/getactivefeedbackexams/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const examSelect = document.getElementById('selectedexam');
+                examSelect.innerHTML = ''; 
+                if (data.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.text = "No Exams Found";
+                    examSelect.add(option);
+                } else {
+                    data.forEach(exam => {
+                        const option = document.createElement('option');
+                        option.value = exam.exam_code; 
+                        option.text = exam.exam_name;   
+                        examSelect.add(option);
+                    })
+                    examSelect.addEventListener('change', () => {
+                        const selectedExamCode = examSelect.value;
+                        changequestionsforthesection(selectedExamCode);
+                    }); 
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching exams:', error);
+            });
+        }
+        function changequestionsforthesection(selectedExamCode) {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const branchCode = urlParams.get('branch_code');
+            const yearNumber = urlParams.get('year');
+            const sectionNumber = urlParams.get('section_number');
+
+            fetch('/changequestionsforthesection/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') 
+                },
+                body: JSON.stringify({
+                    branch_code: branchCode,
+                    year_number: yearNumber,
+                    section_number: sectionNumber,
+                    exam_code: selectedExamCode 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Exam questions updated for this section.");
+                } else {
+                    alert("Error updating exam questions: " + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating exam questions:', error);
+                alert('An error occurred while updating exam questions.');
+            });
+        }
+        function activatefeedback() {
+            const selectedOption = document.querySelector('input[name="activateformid"]:checked');
+            if (selectedOption) {
+            const midterm = Math.abs(selectedOption.value);  
+            const action = selectedOption.value > 0 ? 'activate' : 'deactivate'; 
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const branchCode = urlParams.get('branch_code');
+            const yearNumber = urlParams.get('year');
+            const sectionNumber = urlParams.get('section_number');
+            fetch('/activatefeedback/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    branch_code: branchCode,
+                    year_number: yearNumber,
+                    section_number: sectionNumber,
+                    mid_term: midterm,
+                    action: action 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    getsubjects(); 
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing the request.');
+            });
+            } else {
+            alert("Please select an action.");
+            }
+        }
+        function getsubjects(){
+            fetch('/getsubjects/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ 
+                        branch_code: branchCode, 
+                        year_number: yearNumber, 
+                        section_number: sectionNumber 
+                    })
+            }).then(response => response.json())
+            .then(data => {
+                const subjectTableBody = document.querySelector('#subjectstable tbody');
+                subjectTableBody.innerHTML = ''; 
+                const activeSubjectsDiv = document.querySelector('.getactivesubjects');
+                if (data.subjects && data.subjects.length > 0) {
+                    data.subjects.forEach(subject => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${subject.subject_code}</td> 
+                            <td contenteditable="true" id="student_name_${subject.subject_code}">${subject.subject_name}</td>
+                            <td>${subject.subject_facultydepartment}</td> 
+                            <td>${subject.subject_faculty_name}</td> 
+                            <td><button onclick="savesubjectchanges('${subject.subject_code}')" class="save-button">
+                                Save</button></td>
+                            <td>
+                                <button onclick="deletesubject('${subject.subject_code}')" class="delete-button">
+                                    <svg style="margin-right: 3px;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="h-5 w-5 shrink-0">
+                                        <path fill="currentColor" fill-rule="evenodd" d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </td>
+                        `;
+                        subjectTableBody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="8">No subjects found.</td>';
+                    subjectTableBody.appendChild(row);
+                }
+                activeSubjectsDiv.innerHTML = ''; 
+
+                if (data.subjects && data.subjects.length > 0) {
+                    data.subjects.forEach(subject => {
+                        const subjectDiv = document.createElement('div'); 
+                        subjectDiv.classList.add('subject-container'); 
+                        subjectDiv.innerHTML=`
+                            <div class="image-name-group"> 
+                            <span style="font-weight: 200">${subject.subject_name} (${subject.subject_faculty_name})</span>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
+                        `;
+                        subjectDiv.addEventListener('click', () => {
+                            const redirectUrl = `/adminfeedbackofsubject/?subject_code=${subject.subject_code}&year_of_study=${yearNumber}&section_number=${sectionNumber}&branch_code=${branchCode}`;
+                            window.location.href = redirectUrl;
+                        });
+
+                        activeSubjectsDiv.appendChild(subjectDiv);
+                    });
+                } else {
+                    activeSubjectsDiv.textContent = 'No active subjects found.';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching subjects:', error);
+            });
+        }
+        function savesubjectchanges(subjectCode) {
+            const subjectNameElement = document.getElementById(`student_name_${subjectCode}`);
+            const subjectName = subjectNameElement.textContent.trim();
+            if (subjectName === "") {
+                alert("Subject name must be filled out");
+                getsubjects();
+                return;
+            }
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const branchCode = urlParams.get('branch_code');
+            const yearNumber = urlParams.get('year');
+            const sectionNumber = urlParams.get('section_number');
+
+            fetch('/savesubjectchanges/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ 
+                    subject_code: subjectCode, 
+                    subject_name: subjectName,
+                    branch_code: branchCode,
+                    year_number: yearNumber,
+                    section_number: sectionNumber
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Changes saved successfully');
+                    getsubjects();
+                } else {
+                    alert('Failed to save subject changes');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deletesubject(subjectCode) {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const branchCode = urlParams.get('branch_code');
+            const yearNumber = urlParams.get('year');
+            const sectionNumber = urlParams.get('section_number');
+
+            fetch('/deletesubject/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ 
+                    subject_code: subjectCode,
+                    branch_code: branchCode,
+                    year_number: yearNumber,
+                    section_number: sectionNumber
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Deleted Successfully.');
+                    getsubjects();
+                } else {
+                    alert('Failed to delete Subject.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        document.getElementById('addsingleusersform').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            formData.append('branch_code', branchCode);
+            formData.append('year_number',yearNumber);
+            formData.append('section_number',sectionNumber);
+            fetch(form.action, {
+                method: form.method,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Student added successfully.');
+                    form.reset();
+                    document.getElementById('addmultipleuserform-container').classList.add('hidden');
+                    document.getElementById('addsingleuserform-container').classList.add('hidden');
+                    document.querySelector('.overlay-container').style.display='none';
+                    getStudents();
+                }
+                else{
+                    alert('Failes to add students.')
+                }
+            })
+            .catch(error => {
+                console.error('Error adding students:', error);
+                alert('Error adding students. Please try again later.',error);
+            });
+        });
+        document.getElementById('addmultipleusersform').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            formData.append('branch_code', branchCode);
+            formData.append('year_number',yearNumber);
+            formData.append('section_number',sectionNumber);
+            fetch(form.action, {
+                method: form.method,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Students added successfully.');
+                    form.reset();
+                    document.getElementById('addmultipleuserform-container').classList.add('hidden');
+                    document.getElementById('addsingleuserform-container').classList.add('hidden');
+                    document.querySelector('.overlay-container').style.display='none';
+                    getStudents();
+                }
+                else{
+                    alert('Failes to add students.')
+                }
+            })
+            .catch(error => {
+                console.error('Error adding students:', error);
+                alert('Error adding students. Please try again later.',error);
+            });
+        });
+        document.getElementById('addsubjectform').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            formData.append('branch_code', branchCode);
+            formData.append('year_number',yearNumber);
+            formData.append('section_number',sectionNumber);
+            fetch(form.action, {
+                method: form.method,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Subject added successfully.');
+                    form.reset();
+                    getsubjects();
+                }
+                else{
+                    alert('Failes to add Subject.')
+                }
+            })
+            .catch(error => {
+                console.error('Error adding Subject:', error);
+                alert('Error adding subject. Please try again later.',error);
+            });
+        });
+        function savestudentchanges(studentId) {
+            const studentNameElement = document.getElementById(`student_name_${studentId}`);
+            const studentName=studentNameElement.textContent.trim();
+            if (studentName === "") {
+                alert("Student name must be filled out");
+                getStudents();
+                return;
+            }
+            fetch('/savestudentchanges/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ student_id: studentId,student_name:studentName})
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Changes saved successfully');
+                    getStudents();
+                } else {
+                    alert('Failed to save student changes');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        function deletestudent(studentId){
+            fetch('/deletestudent/',{
+                method:'POST',
+                header:{
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body:JSON.stringify({student_id:studentId})
+            }).then(response => {
+                if(response.ok){
+                    alert('Deleted Successfully.');
+                    getStudents();
+                }
+                else{
+                    alret('Failed to delete Student.');
+                }
+            })
+            .catch(error => console.error('Error:',error))
+        }
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+    
+</body>
+</html>

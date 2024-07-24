@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/adminfaculty.css' %}">
+    <link rel="stylesheet" href="{% static '/css/adminstudent.css' %}">
+    <title>MVGR(A) ADMIN</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
+</head>
+<body>
+<header>
+    <div id="college_title">
+        <div id="college_logo">
+            <a href="https://www.mvgrce.com/" target="_blank">
+                <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
+            </a>
+        </div>
+        <div id="college_sub_title">
+            <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+            <h1 id="title_name">Feedback Management</h1>
+        </div>
+    </div>
+    <div class="navbar-in-admin">
+        <ul>
+            <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
+            <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+            <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
+            <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
+        </ul>
+    </div>
+</header>
+<main>
+    <div class="subnav">
+        <div class="addbranches">
+            <button id="addbranchesbutton" onclick="showAddyearForm()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>Add Year</span>
+            </button>
+        </div>
+        <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
+            <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Logout</span>
+            </button>
+        </div>
+        <div class="overlay">
+            <div id="addyearform-container" class="addyearform-container hidden">
+                <svg id="closebtn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="hideAddyearForm()">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                <form method="post" enctype="multipart/form-data" id="addyearform" action="{% url 'addyear' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="addyearsform">
+                    <div id="form-row">
+                        <label for="yearnumber">Year</label>
+                        <input type="text" name="yearnumber" id="yearnumber" placeholder="Year" required>
+                    </div>
+                    <div id="form-row">
+                        <label for="yearname">Year Name</label>
+                        <input type="text" name="yearname" id="yearname" placeholder="Year Name" required>
+                    </div>
+                    <div class="button-container"> 
+                        <button type="submit" id="addyearbutton">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="edityear" id="edityearContainer" style="display: none;">
+        <div id="editbutton"> 
+            <span class="move-right" onclick="toggleyear()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>Done 
+            </span>
+        </div> 
+        <div class="edityear-table">
+            <table id="edittable">
+                <thead>
+                    <tr>
+                        <th>Year Number</th>
+                        <th>Year Name</th>
+                        <th></th> 
+                        <th></th> 
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="showyear" id="showyearContainer">
+        <div id="editbutton" > 
+            <span class="move-right" onclick="toggleyear()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/> 
+                  </svg>Edit 
+            </span>
+        </div>
+        <div id="years">
+
+        </div>
+    </div>
+</main>
+<script>
+    function showAddyearForm() {
+        document.getElementById('addyearform-container').classList.remove('hidden');
+        document.querySelector('.overlay').classList.add('active');
+    }
+
+    function hideAddyearForm() {
+        document.getElementById('addyearform-container').classList.add('hidden');
+        document.querySelector('.overlay').classList.remove('active');
+    }
+    function toggleyear() {
+            const showyearDiv = document.getElementById('showyearContainer');
+            const edityearDiv = document.getElementById('edityearContainer');
+
+            showyearDiv.style.display = showyearDiv.style.display === 'none' ? 'block' : 'none';
+            edityearDiv.style.display = edityearDiv.style.display === 'block' ? 'none' : 'block';
+    }
+    function redirectToBranchesPage(yearNumber) {
+        window.location.href = `/adminbranches/?year=${yearNumber}`; 
+    }
+     function getyears() {
+         fetch('/getyears/', {
+             method: 'POST',
+             headers: {
+                 'Content-Type': 'application/json',
+                 'X-CSRFToken': getCookie('csrftoken')
+             }
+         })
+         .then(response => response.json())
+         .then(data => {
+             const yearsContainer = document.getElementById('years');
+             yearsContainer.innerHTML = ''; 
+
+             if (data.length === 0) {
+                 yearsContainer.innerHTML = '<p>No Years found.</p>';
+             } else {
+                 data.forEach(year => {
+                     const yearDiv = document.createElement('div');
+                     yearDiv.className = 'year';
+                     yearDiv.innerHTML = `
+                         <div class="image-name-group">
+                             <span>${year.year_name} (${year.year_number})</span>
+                         </div>
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                         <path d="M9 18l6-6-6-6" />
+                         </svg>
+                     `;
+                     yearDiv.addEventListener('click', () => {
+                         redirectToBranchesPage(year.year_number);
+                     });
+                     yearsContainer.appendChild(yearDiv);
+                 });
+                 populateEditTable(data);
+                 
+             }
+         })
+         .catch(error => {
+             console.error('Error fetching years:', error);
+         });
+     }
+    function populateEditTable(data) {
+        const editTableBody = document.querySelector("#edittable tbody");
+        editTableBody.innerHTML = "";
+
+        data.forEach((year) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                    <td>
+                    <select id="year_number_${year.year_number}">
+                        <option value="1" ${year.year_number === 1 ? 'selected' : ''}>1</option>
+                        <option value="2" ${year.year_number === 2 ? 'selected' : ''}>2</option>
+                        <option value="3" ${year.year_number === 3 ? 'selected' : ''}>3</option>
+                        <option value="4" ${year.year_number === 4 ? 'selected' : ''}>4</option>
+                    </select>
+                    </td>
+                    <td contenteditable="true" id="year_name_${year.year_number}">${year.year_name}</td>
+                    <td><button onclick="saveYearChanges(${year.year_number})" class="save-button">Save</button></td>
+                    <td>
+                        <button onclick="deleteYear(${year.year_number})" class="delete-button">
+                            <svg style="margin-right: 3px;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="h-5 w-5 shrink-0">
+                                <path fill="currentColor" fill-rule="evenodd" d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1" clip-rule="evenodd"></path>
+                            </svg>
+                            Delete
+                        </button>
+                    </td>
+                `;
+            editTableBody.appendChild(row);
+        });
+    }
+
+    function saveYearChanges(yearNumber) {
+        const yearNameElement = document.getElementById(`year_name_${yearNumber}`);
+        const yearNumberSelect = document.getElementById(`year_number_${yearNumber}`);
+        const yearName = yearNameElement.textContent.trim();
+        const newYearNumber = yearNumberSelect.value;
+        if (yearName === "" || newYearNumber === "") {
+            alert("Year name and number must be filled out");
+            getyears();
+            return;
+        }
+
+        fetch("/saveyearchanges/", {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({
+            year_number: yearNumber,
+            new_year_number: newYearNumber,
+            year_name: yearName,
+            }),
+        })
+        .then((response) => {
+            if (response.ok) {
+                alert("Changes saved successfully");
+                getyears(); 
+            } else {
+                alert("Failed to save year changes");
+            }
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        getyears();
+    });
+
+    function deleteYear(yearNumber){
+        fetch('/deleteyear/',{
+            method:'POST',
+            headers:{
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body:JSON.stringify({year_number:yearNumber})
+        })
+        .then(response=>{
+            if(!response.ok){
+                throw new Error('Network response was not ok.');
+            }
+            return response.json();
+        })
+        .then(data=>{
+            if(data.success){
+                alert('Deleted Successfully.');
+                getdepartments();
+            }
+            else{
+                alert('Failed to delete.');
+            }
+        })
+        .catch(error=>{
+            console.error('Error saving changes:', error);
+            alert('Error saving changes. Please try again later.');
+        });
+    }
+
+    document.getElementById('addyearform').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        fetch(form.action, {
+            method: form.method,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Year added successfully.');
+                form.reset();
+                document.querySelector('.overlay').classList.remove('active');
+                getyears();
+            }
+            else{
+                alert('Failes to add Year.')
+            }
+        })
+        .catch(error => {
+            console.error('Error adding Year:', error);
+            alert('Error adding Year. Please try again later.');
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+</body>
+</html>

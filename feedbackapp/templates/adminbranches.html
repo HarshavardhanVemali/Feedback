@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/adminfaculty.css' %}">
+    <link rel="stylesheet" href="{% static 'css/adminbranches.css' %}">
+    <title>MVGR(A) ADMIN</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
+</head>
+<body>
+    <header>
+        <div id="college_title">
+            <div id="college_logo">
+                <a href="https://www.mvgrce.com/" target="_blank">
+                    <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
+                </a>
+            </div>
+            <div id="college_sub_title">
+                <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+                <h1 id="title_name">Feedback Management</h1>
+            </div>
+        </div>
+        <div class="navbar-in-admin">
+            <ul>
+                <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
+                <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+                <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
+                <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
+
+            </ul>
+        </div>
+    </header>
+    <main>
+        <div class="subnav">
+            <div class="addbranches">
+                <button id="addbranchesbutton" onclick="showAddBrachesForm()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>Add Branches</span>
+                </button>
+            </div>
+            <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
+                <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Logout</span></button>
+            </div>
+            <div class="overlay">
+                <div id="addbranchesform-container" class="addbranchesform-container hidden">
+                    <svg id="closebtn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="hideAddBranchesForm()">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    <form method="post" enctype="multipart/form-data" id="addbranchesform" action="{% url 'addbranches' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="addbranchesform">
+                        <div id="form-row">
+                            <label for="branchname">Branch Name</label>
+                            <input type="text" name="branchname" id="branchname" placeholder="Branch Name" required>
+                        </div>
+                        <div id="form-row">
+                            <label for="branchcode">Branch Code</label>
+                            <input type="text" name="branchcode" id="branchcode" placeholder="Branch Code" required>
+                        </div>
+                        <div id="form-row">
+                            <label for="department">Department</label>
+                            <select name="department" id="department" required>
+                                <option value="">Select Department</option> 
+                            </select>
+                        </div>
+                        <input type="hidden" name="year_number" id="yearNumberInput">
+                        <div class="button-container"> 
+                            <button type="submit" id="addfacultybutton">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="editbranches" id="editbranchesContainer" style="display: none;">
+            <div id="editbutton"> 
+                <span class="move-right" onclick="togglebranches()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                      </svg>Done 
+                </span>
+            </div> 
+            <p>Branches</p>
+            <div class="branchestablecontainer">
+                <table id="branchestable">
+                    <thead>
+                        <tr>
+                            <th>Branch code</th>
+                            <th>Branch</th>
+                            <th>Department</th>
+                            <th>Save</th> 
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="showbranches" id="showbranchesContainer">
+            <div id="editbutton" > 
+                <span class="move-right" onclick="togglebranches()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/> 
+                      </svg>Edit 
+                </span>
+            </div>
+            <div id="branches">
+                
+            </div>
+        </div>
+    </main>
+</body>
+<script>
+    function showAddBrachesForm() {
+    document.getElementById('addbranchesform-container').classList.remove('hidden');
+    document.querySelector('.overlay').classList.add('active');
+    }
+    function hideAddBranchesForm() {
+        document.getElementById('addbranchesform-container').classList.add('hidden');
+        document.querySelector('.overlay').classList.remove('active');
+    }
+    function togglebranches() {
+        const showbranchDiv = document.getElementById('showbranchesContainer');
+        const editbranchDiv = document.getElementById('editbranchesContainer'); 
+
+        showbranchDiv.style.display = showbranchDiv.style.display === 'none' ? 'block' : 'none';
+        editbranchDiv.style.display = editbranchDiv.style.display === 'block' ? 'none' : 'block';
+    }
+    function getdepartments() {
+        fetch('/getdepartments/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const departmentSelect = document.getElementById('department'); 
+            departmentSelect.innerHTML = '<option value="">Select Department</option>';
+            data.forEach(department => {
+                const option = document.createElement('option');
+                option.value = department.code;
+                option.text = `${department.name}`; 
+                departmentSelect.add(option); 
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching departments:', error);
+        });
+    }
+    document.getElementById('addbranchesform').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        formData.append('year_number',yearNumber)
+        fetch(form.action, {
+            method: form.method,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Branch created successfully.');
+                form.reset();
+                document.querySelector('.overlay').classList.remove('active');
+                getdepartments();
+                getbranches(yearNumber);
+            } else {
+                alert('Failed to add Branch: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error adding Branch:', error);
+            alert('Error adding Branch Please try again later.');
+        });
+    });
+    function getbranches(yearNumber) {
+        fetch('/getbranches/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                year_number: yearNumber, 
+            })
+        }).then(response => response.json())
+            .then(data => {
+                const branchesContainer = document.getElementById('branches');
+                branchesContainer.innerHTML = ''; 
+                if(data.length===0){
+                    branchesContainer.innerHTML='No Branches found.'
+                }
+                else{
+                    data.forEach(branch => {
+                        const branchDiv=document.createElement('div');
+                        branchDiv.className = 'branch';
+                        branchDiv.innerHTML = `
+                        <div class="image-name-group">
+                            <span>${branch.name} (${branch.code})</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18l6-6-6-6" />
+                        </svg>  
+                    `;
+                    branchesContainer.appendChild(branchDiv);
+                    branchDiv.addEventListener('click', () => {
+                        redirectToSectionPage(branch.code);
+                    });
+                });
+                populateEditTable(data);
+            }
+        })
+        .catch(error => {
+                console.error('Error fetching branches:', error);
+        });
+    }
+    function redirectToSectionPage(branchCode) {
+        if (!yearNumber) {
+            console.error('yearNumber is not defined');
+            return;
+        }
+        const url = new URL('/adminsections.html', window.location.origin);
+        url.searchParams.append('branch_code', branchCode);
+        url.searchParams.append('year', yearNumber);
+        window.location.href = url.href;
+    }
+    function populateEditTable(data) {
+        const branchTableBody = document.querySelector('#branchestable tbody');
+        branchTableBody.innerHTML = "";
+
+        data.forEach(branch => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="overflow-x:scroll;">${branch.code}</td>
+                    <td contenteditable="true" style="overflow-x:scroll;max-width:150px;" id="branch_name_${branch.code}">${branch.name}</td>
+                    <td>${branch.department}</td>
+                    <td><button onclick="savebranchChanges('${branch.code}')" class="save-button">Save</button></td>
+                    <td>
+                        <button onclick="deleteBranch('${branch.code}')" class="delete-button">
+                            <svg style="margin-right: 3px;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="h-5 w-5 shrink-0">
+                                <path fill="currentColor" fill-rule="evenodd" d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1" clip-rule="evenodd"></path>
+                            </svg>
+                            Delete
+                        </button>
+                    </td>
+                `;
+                branchTableBody.appendChild(row);
+                const branchNameCell = row.querySelector(`#branch_name_${branch.code}`);
+                branchNameCell.addEventListener('input', () => {
+                    branch.name = branchNameCell.textContent.trim();
+                });
+        });
+    }
+    function savebranchChanges(branchCode) {
+        const branchNameElement = document.getElementById(`branch_name_${branchCode}`);
+        const branchName = branchNameElement.textContent.trim();
+        if (branchName === "") {
+            alert("Branch name must be filled out.");
+            getbranches();
+            return;
+        }
+        fetch('/savebranchchanges/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                branch_code: branchCode, 
+                branch_name: branchName,
+                year_number: yearNumber 
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if(data.success){
+                alert('Changes saved successfully');
+                getbranches(yearNumber);
+            }
+            else{
+                alert('Unable to save changes.');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving changes:', error);
+            alert('Error saving changes. Please try again later.');
+        });
+    }
+    function deleteBranch(branchCode){
+        fetch('/deletebranch/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                branch_code: branchCode,
+                year_number: yearNumber
+            })
+        })
+        .then(response=>{
+            if(!response.ok){
+                throw new Error('Network response was not ok.');
+            }
+            return response.json();
+        })
+        .then(data=>{
+            if(data.success){
+                alert('Deleted Successfully.');
+                getbranches(yearNumber);
+            }
+            else{
+                alert('Failed to delete.');
+            }
+        })
+        .catch(error=>{
+            console.error('Error saving changes:', error);
+            alert('Error saving changes. Please try again later.');
+        });
+    }
+    let yearNumber;
+    document.addEventListener('DOMContentLoaded', () => {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        yearNumber = urlParams.get('year');
+
+        if (yearNumber) {
+            getbranches(yearNumber);
+            localStorage.setItem('currentYear', yearNumber);
+            document.getElementById('yearNumberInput').value = yearNumber;
+        } 
+        getdepartments();
+    }); 
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+</html>

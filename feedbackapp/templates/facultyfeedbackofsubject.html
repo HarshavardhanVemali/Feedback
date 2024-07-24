@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{% static 'css/adminpage.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/adminstudent.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/adminfeedbackofsubject.css' %}" />
+    <title>MVGR(A) ADMIN</title>
+    <link
+      href="https://unpkg.com/aos@2.3.1/dist/aos.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{% static 'images/college_logo.png' %}"
+    />
+  </head>
+  <body>
+    <header>
+      <div id="college_title">
+        <div id="college_logo">
+          <a href="https://www.mvgrce.com/" target="_blank">
+            <img
+              src="{% static 'images/college_logo.png' %}"
+              alt="college_logo"
+            />
+          </a>
+        </div>
+        <div id="college_sub_title">
+          <h1>
+            Maharaj Vijayaram Gajapathi Raj College of Engineering
+            (Autonomous)
+          </h1>
+          <h1 id="title_name">Feedback Management</h1>
+        </div>
+      </div>
+    </header>
+    <main>
+      <div class="subnavlinks">
+        <button id="mid1-container" onclick="toggleContent('mid1')">
+          <span>Mid-1</span>
+        </button>
+        <button id="mid2-container" onclick="toggleContent('mid2')">
+          <span>Mid-2</span>
+        </button>
+        <div class="subnav">
+          <div
+            class="logoutbutton"
+            onclick="window.location.href='{% url 'adminlogout' %}'"
+          >
+            <button
+              id="logout-button"
+              onclick="window.location.href='{% url 'adminlogout' %}'"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mid1-container" id="mid1-content" style="display: none">
+        <div class="subnav">
+          <p class="feedback-title">Mid-1 Analysis</p>
+        </div>
+        <div class="analysis-tabs">
+          <button
+            class="analysis-tab"
+            onclick="showAnalysis('question-analysis-mid1')"
+          >
+            Question Wise
+          </button>
+          <button
+            class="analysis-tab"
+            onclick="showAnalysis('comments-analysis-mid1')"
+          >
+            Comments
+          </button>
+        </div>
+        <div id="total-average-rating-mid1"></div>
+        <div class="analysis-content" id="question-analysis-mid1"></div>
+        <div class="analysis-content" id="comments-analysis-mid1"></div>
+      </div>
+
+      <div class="mid2-container" id="mid2-content" style="display: none">
+        <div class="subnav">
+          <p class="feedback-title">Mid-2 Analysis</p>
+        </div>
+        <div class="analysis-tabs">
+          <button
+            class="analysis-tab"
+            onclick="showAnalysis('question-analysis-mid2')"
+          >
+            Question Wise
+          </button>
+          <button
+            class="analysis-tab"
+            onclick="showAnalysis('comments-analysis-mid2')"
+          >
+            Comments
+          </button>
+        </div>
+        <div id="total-average-rating-mid2"></div>
+        <div class="analysis-content" id="question-analysis-mid2"></div>
+        <div class="analysis-content" id="comments-analysis-mid2"></div>
+      </div>
+    </main>
+  </body>
+  <script>
+    let sectionNumber;
+    let branchCode;
+    let yearNumber;
+    let subjectCode;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      branchCode = urlParams.get("branch_code");
+      yearNumber = urlParams.get("year_of_study");
+      subjectCode = urlParams.get("subject_code");
+      sectionNumber = urlParams.get("section_number");
+    });
+
+    function toggleContent(target) {
+      const mid1Content = document.getElementById("mid1-content");
+      const mid2Content = document.getElementById("mid2-content");
+
+      if (target === "mid1") {
+        mid1Content.style.display = "block";
+        mid2Content.style.display = "none";
+        getOverallRating(1);
+
+      } else if (target === "mid2") {
+        mid2Content.style.display = "block";
+        mid1Content.style.display = "none";
+        getOverallRating(2);
+      }
+    }
+
+    function showAnalysis(analysisId) {
+      const analysisContents = document.querySelectorAll(".analysis-content");
+      const analysisTabs = document.querySelectorAll(".analysis-tab");
+      analysisContents.forEach((content) => {
+        content.style.display = "none";
+        content.innerHTML = "";
+      });
+      analysisTabs.forEach((tab) => {
+        tab.classList.remove("active");
+      });
+      const midtermNumber = analysisId.includes("mid1") ? 1 : 2;
+      if (analysisId.startsWith("student")) {
+        getStudentAnalysis(midtermNumber);
+      } else if (analysisId.startsWith("question")) {
+        getQuestionAnalysis(midtermNumber);
+      } else if (analysisId.startsWith("comments")) {
+        getstudentcomments(midtermNumber);
+      }
+      document.getElementById(analysisId).style.display = "block";
+      event.target.classList.add("active");
+    }
+
+    function getStudentAnalysis(midterm) {
+      getfeedbackofthesubject(midterm, "student-analysis");
+    }
+
+    function getQuestionAnalysis(midterm) {
+      getfeedbackofthesubject(midterm, "question-analysis");
+    }
+
+    function getfeedbackofthesubject(midterm, analysisType) {
+      let fetchUrl =
+        analysisType === "student-analysis"
+          ? "/get_student_wise_analysis/"
+          : "/get_question_wise_analysis/";
+
+      fetch(fetchUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({
+          branch_code: branchCode,
+          year_of_study: yearNumber,
+          subject_code: subjectCode,
+          section_number: sectionNumber,
+          mid_term: midterm,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (analysisType === "student-analysis" && data.analysis_data) {
+            displayStudentAnalysis(data.analysis_data, midterm);
+          } else if (
+            analysisType === "question-analysis" &&
+            data.analysis_data
+          ) {
+            displayQuestionAnalysis(data.analysis_data, midterm);
+          } else {
+            alert(data.error || "No analysis data found.");
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching analysis data:", error);
+          alert("Error fetching analysis data.");
+        });
+    }
+    function getOverallRating(midterm) {
+      fetch("/get_overall_rating/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({
+          branch_code: branchCode,
+          year_of_study: yearNumber,
+          subject_code: subjectCode,
+          section_number: sectionNumber,
+          mid_term: midterm,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const ratingDiv = document.getElementById(
+            `total-average-rating-mid${midterm}`
+          );
+          if (data.overall_rating !== undefined) {
+            ratingDiv.innerHTML = `
+                    <strong>Total Average Rating (Mid-${midterm}):</strong> ${data.overall_rating.toFixed(
+              2
+            )} 
+                    ${createStarRating(data.overall_rating)}
+                `;
+          } else {
+            ratingDiv.innerHTML = `<strong>Total Average Rating (Mid-${midterm}):</strong> No ratings yet`;
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching overall rating:", error);
+        });
+    }
+    function displayStudentComments(commentsData, midterm) {
+      const commentsDiv = document.getElementById(
+        `comments-analysis-mid${midterm}`
+      );
+      commentsDiv.innerHTML = "";
+      const table = document.createElement("table");
+      table.classList.add("comments-table", "center-table");
+      const thead = table.createTHead();
+      const headerRow = thead.insertRow();
+      headerRow.insertCell().textContent = "Comments";
+      const tbody = table.createTBody();
+      commentsData.forEach((comment) => {
+        if (comment.comment.trim() !== "") {
+          const row = tbody.insertRow();
+          row.insertCell().textContent = comment.comment;
+        }
+      });
+
+      commentsDiv.appendChild(table);
+    }
+    window.onload = () => {
+      toggleContent("mid1");
+      getOverallRating(1);
+    };
+
+    function displayQuestionAnalysis(analysisData, midterm) {
+      const analysisDiv = document.getElementById(
+        `question-analysis-mid${midterm}`
+      );
+      analysisDiv.innerHTML = "";
+
+      analysisData.forEach((question, index) => {
+        const questionDiv = document.createElement("div");
+        questionDiv.classList.add("question-analysis");
+        const questionText = document.createElement("p");
+        questionText.textContent = `Question ${
+          question.question_number
+        }: ${question.question_text}`;
+        questionDiv.appendChild(questionText);
+
+        const contentDiv = document.createElement("div");
+        contentDiv.classList.add("question-content");
+        contentDiv.style.display = "flex";
+
+        const optionsDiv = document.createElement("div");
+        optionsDiv.classList.add("options-display");
+        Object.entries(question.options).forEach(([option, count]) => {
+          const optionItem = document.createElement("p");
+          optionItem.textContent = `${option}: ${count}`;
+          optionsDiv.appendChild(optionItem);
+        });
+        contentDiv.appendChild(optionsDiv);
+        const canvas = document.createElement("canvas");
+        canvas.classList = "question-graph";
+        canvas.id = `questionAnalysisChartMid${midterm}-${index}`;
+        canvas.style.width = "300px";
+        canvas.style.height = "200px";
+        contentDiv.appendChild(canvas);
+
+        questionDiv.appendChild(contentDiv);
+
+        const ctx = canvas.getContext("2d");
+        const optionLabels = Object.keys(question.options);
+        const optionCounts = Object.values(question.options);
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: optionLabels,
+            datasets: [
+              {
+                label: `Question ${question.question_number}`,
+                data: optionCounts,
+                backgroundColor: [
+                  "rgba(255, 99, 132, 0.2)",
+                  "rgba(54, 162, 235, 0.2)",
+                  "rgba(255, 206, 86, 0.2)",
+                  "rgba(75, 192, 192, 0.2)",
+                ].slice(0, optionLabels.length),
+                borderColor: [
+                  "rgba(255, 99, 132, 1)",
+                  "rgba(54, 162, 235, 1)",
+                  "rgba(255, 206, 86, 1)",
+                  "rgba(75, 192, 192, 1)",
+                ].slice(0, optionLabels.length),
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: "Number of Students",
+                },
+                ticks: {
+                  stepSize: 1,
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+            width: 150,
+            height: 100,
+          },
+        });
+
+        analysisDiv.appendChild(questionDiv);
+      });
+    }
+    function getstudentcomments(midterm) {
+      fetch("/get_student_comments/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({
+          branch_code: branchCode,
+          year_of_study: yearNumber,
+          subject_code: subjectCode,
+          section_number: sectionNumber,
+          mid_term: midterm,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.analysis_data) {
+            displayStudentComments(data.analysis_data, midterm);
+          } else {
+            alert(data.error || "No comments found.");
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching comments data:", error);
+          alert("Error fetching comments data.");
+        });
+    }
+
+    function displayStudentComments(commentsData, midterm) {
+      const commentsDiv = document.getElementById(
+        `comments-analysis-mid${midterm}`
+      );
+      commentsDiv.innerHTML = "";
+      const table = document.createElement("table");
+      table.classList.add("comments-table", "center-table");
+      const thead = table.createTHead();
+      const headerRow = thead.insertRow();
+      headerRow.insertCell().textContent = "Comments";
+      const tbody = table.createTBody();
+      commentsData.forEach((comment) => {
+        if (comment.comment.trim() !== "") {
+          const row = tbody.insertRow();
+          row.insertCell().textContent = comment.comment;
+        }
+      });
+
+      commentsDiv.appendChild(table);
+    }
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(
+              cookie.substring(name.length + 1)
+            );
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    window.onload = () => {
+      toggleContent("mid1");
+    };
+  </script>
+</html>
