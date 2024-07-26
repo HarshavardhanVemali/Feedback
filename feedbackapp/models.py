@@ -45,7 +45,7 @@ class Faculty(User):
 class StudyingYear(models.Model):
     studying_year=models.PositiveIntegerField(unique=True,default=1)
     studying_year_name=models.CharField(max_length=40)
-
+    academic_year=models.CharField(max_length=30,null=True)
     def __str__(self):
         return self.studying_year_name
     

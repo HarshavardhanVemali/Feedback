@@ -10,6 +10,7 @@
     <title>MVGR(A) ADMIN</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
 </head>
+
 <body>
 <header>
     <div id="college_title">
@@ -33,9 +34,12 @@
     </div>
 </header>
 <main>
+    <div class="breadcrumb"> 
+        
+    </div>
     <div class="subnav">
         <div class="addbranches">
-            <button id="backbutton" onclick="window.location.href='{% url 'adminstudents' %}'">
+            <button id="backbutton">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="15 18 9 12 15 6" />
                   </svg>
@@ -83,6 +87,7 @@
                 </form>
             </div>
         </div>
+    </div>
     </div>
     <div class="editsections" id="editSectionContainer" style="display: none;">
         <div id="editbutton"> 
@@ -138,18 +143,24 @@
             showSectionsDiv.style.display = showSectionsDiv.style.display === 'none' ? 'block' : 'none';
             editSectionsDiv.style.display = editSectionsDiv.style.display === 'block' ? 'none' : 'block';
     }
-    function redirectToAddStudentPage(branchCode,sectionNumber) {
+    function redirectToAddStudentPage(branchCode,sectionNumber,sectionName) {
         const yearNumber=new URLSearchParams(window.location.search).get('year')
         if (!yearNumber) {
             console.error('yearNumber is not defined');
             return;
         }
         const url = new URL('/adminaddstudents.html', window.location.origin);
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const branchName = urlParams.get('branch_name'); 
         url.searchParams.append('branch_code', branchCode);
         url.searchParams.append('year', yearNumber);
+        url.searchParams.append('branch_name',branchName);
         url.searchParams.append('section_number',sectionNumber);
+        url.searchParams.append('section_name',sectionName)
         window.location.href = url.href;
     }
+
     function getSections(branchCode,yearNumber) {
         fetch('/getsections/', {
             method: 'POST',
@@ -180,7 +191,7 @@
                     `;
                     sectionsContainer.appendChild(sectionDiv);
                     sectionDiv.addEventListener('click', () => {
-                        redirectToAddStudentPage(branchCode,section.section_number);
+                        redirectToAddStudentPage(branchCode,section.section_number,section.section_name);
                     });
                 });
                 populateEditTable(data,branchCode);
@@ -269,11 +280,26 @@
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const branchCode = urlParams.get('branch_code');
-        yearNumber=urlParams.get('year');
-        if (branchCode && yearNumber) { 
+        yearNumber = urlParams.get('year');
+        const branchName = urlParams.get('branch_name'); 
+
+        if (branchCode && yearNumber) {
             getSections(branchCode, yearNumber);
+            updateBreadcrumbs(yearNumber, branchName); 
         }
     });
+    function updateBreadcrumbs(yearNumber, branchName) {
+        const breadcrumbContainer = document.querySelector('.breadcrumb');
+        breadcrumbContainer.innerHTML = `
+            <a href="{% url 'adminstudents' %}">/Students</a> /
+            <a href="/adminbranches/?year=${yearNumber}">Year ${yearNumber}</a> /
+            ${branchName ? `<span>${branchName} / </span>` : ''} 
+        `;
+        const BackButton=document.getElementById('backbutton');
+        BackButton.onclick = function() {
+            window.location.href = `/adminbranches/?year=${yearNumber}`;
+        };
+    }
 
     document.getElementById('addsectionform').addEventListener('submit', function(event) {
         event.preventDefault();

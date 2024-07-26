@@ -125,6 +125,7 @@
 
 #form-row input[type="text"],
 #form-row input[type="file"],
+#form-row input[type="number"],
 #form-row select {
     border: 1px solid #333;
     border-radius: 5px;
@@ -149,6 +150,7 @@
     border-radius: 4px;
     background-color: dodgerblue;
     border: none;
+    cursor: pointer;
 }
 #addfacultybutton:hover{
     background-color: lightskyblue;

@@ -165,8 +165,11 @@ body {
     border-radius: 5px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     text-align: center;
+    color: #000;
   }
-  
+  #text_scroll{
+    color: #000;
+  }
   #close-overlay {
     margin-top: 15px;
     padding: 10px 20px;

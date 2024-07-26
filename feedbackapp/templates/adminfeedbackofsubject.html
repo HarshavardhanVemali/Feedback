@@ -389,11 +389,14 @@
         headerRow.insertCell().textContent = 'Comment';
         const tbody = table.createTBody();
         commentsData.forEach(comment => {
-            const row = tbody.insertRow();
-            row.insertCell().textContent = comment.student_id;
-            row.insertCell().textContent = comment.student_name;
-            row.insertCell().textContent = comment.comment;
+            if (comment.comment.trim() !== "") {
+                const row = tbody.insertRow();
+                row.insertCell().textContent = comment.student_id;
+                row.insertCell().textContent = comment.student_name;
+                row.insertCell().textContent = comment.comment; 
+            }
         });
+
         commentsDiv.appendChild(table);
     }
 

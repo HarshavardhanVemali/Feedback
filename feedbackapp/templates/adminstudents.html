@@ -65,11 +65,15 @@
                     <input type="hidden" name="form_type" value="addyearsform">
                     <div id="form-row">
                         <label for="yearnumber">Year</label>
-                        <input type="text" name="yearnumber" id="yearnumber" placeholder="Year" required>
+                        <input type="number" name="yearnumber" id="yearnumber" placeholder="Year" min="1" max="4" required>
                     </div>
                     <div id="form-row">
-                        <label for="yearname">Year Name</label>
+                        <label for="yearname">Semester</label>
                         <input type="text" name="yearname" id="yearname" placeholder="Year Name" required>
+                    </div>
+                    <div id="form-row">
+                        <label for="academicyear">Academic year</label>
+                        <input type="text" name="academicyear" id="academicyear" placeholder="Academic Year" required>
                     </div>
                     <div class="button-container"> 
                         <button type="submit" id="addyearbutton">Add</button>
@@ -91,7 +95,8 @@
                 <thead>
                     <tr>
                         <th>Year Number</th>
-                        <th>Year Name</th>
+                        <th>Semester</th>
+                        <th>Academic Year</th>
                         <th></th> 
                         <th></th> 
                     </tr>
@@ -156,7 +161,7 @@
                      yearDiv.className = 'year';
                      yearDiv.innerHTML = `
                          <div class="image-name-group">
-                             <span>${year.year_name} (${year.year_number})</span>
+                             <span>${year.year_number} Year - ${year.year_name}</span>
                          </div>
                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                          <path d="M9 18l6-6-6-6" />
@@ -191,6 +196,7 @@
                     </select>
                     </td>
                     <td contenteditable="true" id="year_name_${year.year_number}">${year.year_name}</td>
+                    <td contenteditable="true" id="academic_name_${year.year_number}">${year.academic_year}</td>
                     <td><button onclick="saveYearChanges(${year.year_number})" class="save-button">Save</button></td>
                     <td>
                         <button onclick="deleteYear(${year.year_number})" class="delete-button">
@@ -208,14 +214,15 @@
     function saveYearChanges(yearNumber) {
         const yearNameElement = document.getElementById(`year_name_${yearNumber}`);
         const yearNumberSelect = document.getElementById(`year_number_${yearNumber}`);
+        const academicYear=document.getElementById(`academic_name_${yearNumber}`);
         const yearName = yearNameElement.textContent.trim();
         const newYearNumber = yearNumberSelect.value;
-        if (yearName === "" || newYearNumber === "") {
-            alert("Year name and number must be filled out");
+        const newacademicYear=academicYear.textContent.trim();
+        if (yearName === "" || newYearNumber === "" || newacademicYear==="") {
+            alert("Year name and number and academic year must be filled out");
             getyears();
             return;
         }
-
         fetch("/saveyearchanges/", {
             method: "POST",
             headers: {
@@ -226,6 +233,7 @@
             year_number: yearNumber,
             new_year_number: newYearNumber,
             year_name: yearName,
+            academic_year:newacademicYear
             }),
         })
         .then((response) => {

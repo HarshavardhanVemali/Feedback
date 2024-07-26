@@ -1,0 +1,538 @@
+.showbranches,.showyear{
+    margin-left: 40px;
+    font-size: 20px;
+    margin-top: 10px;
+    margin-right: 40px;
+}
+.subnavlinks {
+    margin-top: 10px;
+    display: flex;
+    gap: 100px;
+    justify-content: center;
+}
+.subnavlinks button {
+    background-color: white;
+    border: 2px solid transparent;
+    border-radius: 5px;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: border 0.3s ease;
+    cursor: pointer;
+    
+}
+.subnavlinks button:hover {
+    border: 2px solid lightblue;
+
+}
+.subnavlinks button.active{
+    background: linear-gradient(to right, #ffecd2, #fcb69f);
+
+}
+.subnavlinks svg {
+    width: 24px;
+    height: 24px;
+}
+.branch {
+    background: linear-gradient(to right, #d3e0ea, #ffffff);
+    border-radius: 10px;
+    font-size: 15px;
+    padding: 20px;
+    margin: 10px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    justify-content: space-between; 
+    transition: transform 0.3s ease-in-out;
+    cursor: pointer;
+
+}
+#addbranchesform-container form {
+    display: flex;
+    flex-direction: column;
+}
+.form-row{
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-row label {
+    display: block;
+    margin-bottom: 5px;
+    min-width: 150px;
+    max-width: 150px;
+}
+
+.form-row input[type="text"],
+.form-row input[type="number"],textarea{
+    width: 50%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #333;
+    border-radius: 5px;
+}
+.form-row input[type="file"]{
+    border: none;
+    border-radius: none;
+}
+#studentnames{
+min-width: 100px;
+min-height: 100px;
+max-height: 200px;
+max-width: 200px;
+}
+.button-container {
+    display: flex;
+    justify-content: center;
+}
+
+#addmultipleuserbutton,#addsingleuserbutton,#addquestionbutton,#addsubjectbutton{
+    width: 100px;
+    padding: 5px;
+    height: 35px;
+    align-items: center;
+    border-radius: 4px;
+    background-color: dodgerblue;
+    border: none;
+    cursor: pointer;
+}
+#addmultipleuserbutton:hover,#addsingleuserbutton:hover,#addquestionbutton:hover,#addsubjectbutton:hover{
+    background-color: lightskyblue;
+}
+
+#closebtn:hover{
+    fill: #ea4335;
+    stroke-width: 1;
+}
+.branch:hover {
+    background: linear-gradient(to right, #fafafa, #eeeeee);
+    transform: scale(1.02); 
+}
+.branch:hover{
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+.overlay-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+}
+#addquestionform-container{
+    background: linear-gradient(to right, #d9afd9, #97d9e1);
+    border-radius: 20px;
+}
+.overlay-container.active {
+    display: block;
+}
+.addsectionform-container ,.addyearform-container,.form-container{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    z-index: 1000;
+    opacity: 1;
+}
+#question{
+    min-width: 600px;
+    resize: none;
+    height: 100px;
+}
+.optionsdiv input{
+margin-right: 30px;
+height: 50px;
+width:400px;
+}
+.addsectionform-container form ,.addyearform-container form{
+    display: flex;
+    flex-direction: column;
+}
+.showsections,.showyear,.showfeedback,.showsubjects{
+    margin-left: 40px;
+    margin-top: 10px;
+}
+#addsectionbutton,#addyearbutton,#addfeedbackbutton{
+    width: 100px;
+    padding: 5px;
+    height: 35px;
+    align-items: center;
+    border-radius: 4px;
+    background-color: dodgerblue;
+    border: none;
+    cursor: pointer;
+}
+#addsectionbutton:hover,#addyearbutton:hover,#addfeedbackbutton:hover{
+    background-color: lightskyblue;
+}
+#editbutton {
+    display: flex;
+    align-items: center;
+}
+
+.editsections,.edityear,.showstudents,.editfeedback{
+    margin-left: 40px;
+    margin-top: 10px;
+    margin-right: 40px;
+}
+
+.editsections-table,.edityear-table,.studentstablecontainer,.editfeedback-table,.subjectstablecontainer{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+#edittable,#studentstable ,#editfeedback,#subjectstable{
+    width: 90%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border: 1px solid #ddd;
+}
+#edittable,#studentstable,#editfeedback,#subjectstable {
+    border-radius: 10px;
+}
+#edittable th, #edittable td ,#studentstable th,#studentstable td,#editfeedback th,#editfeedback td,#subjectstable th,#subjectstable td{
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    font-weight: 200;
+}
+
+#edittable th ,#studentstable th,#editfeedback th,#subjectstable th{
+    background-color: #e6ffe6;
+    color: #000;
+}
+
+#edittable tbody tr:nth-child(even) ,#studentstable tbody tr:nth-child(even),#editfeedback tbody tr:nth-child(even),#subjectstable tbody tr:nth-child(even){
+    background-color: #f2f8ff;
+    transition: background-color 0.3s ease;
+    color: #0066cc;
+}
+
+#edittable tbody tr:nth-child(odd) ,#studentstable tbody tr:nth-child(odd),#editfeedback tbody tr:nth-child(odd),#subjectstable tbody tr:nth-child(odd){
+    background-color: #ffffff;
+    transition: background-color 0.3s ease;
+}
+
+#edittable tbody tr:hover ,#studentstable tbody tr:hover,#editfeedback tbody tr:hover,#subjectstable tbody tr:hover{
+    background-color: #f1f1f1;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+.move-right {
+    margin-left: auto; 
+    margin-right: 10px;
+    background-color: dodgerblue;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+}
+.move-right:hover{
+    background-color: lightblue;
+}
+.showsections,.showyear,.showfeedback{
+    margin-left: 40px;
+    font-size: 20px;
+    margin-top: 10px;
+    margin-right: 40px;
+}
+.section ,.year,.feedback{
+    background: linear-gradient(to right, #d3e0ea, #ffffff);
+    border-radius: 10px;
+    font-size: 15px;
+    padding: 20px;
+    margin: 10px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    justify-content: space-between; 
+    transition: transform 0.3s ease-in-out;
+    cursor: pointer;
+
+}
+.section:hover ,.year:hover,.feedback:hover{
+    background: linear-gradient(to right, #fafafa, #eeeeee);
+    transform: scale(1.02); 
+}
+.section:hover,.year:hover{
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+/*adminaddstudnts*/
+.addstudentsnavbar,.addquestionsnavbar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 15px 20px;
+    margin-top: 50px;
+    background-color: #f2f2f2;
+    margin-left: 20px;
+    margin-right: 20px;
+    border-radius: 10px;
+}
+
+.addsingleuser, 
+.addmultipleusers,.addsinglequestion {
+    margin-right: 10px; 
+}
+
+.addsingleuser button, 
+.addmultipleusers button ,.addmultiplequestions button,.addsinglequestion button{
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4CAF50; 
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.addsingleuser svg, 
+.addmultipleusers svg ,.addmultiplequestions svg,.addsinglequestion svg{
+    margin-right: 5px;
+}
+
+.search {
+    display: flex;
+    align-items: center; 
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px; 
+}
+
+.search input[type="text"] {
+    border: none;
+    padding: 10px; 
+    outline: none;
+     
+}
+
+.search svg {
+    margin-left: 3px;
+    width: 18px; 
+    height: 18px;
+    cursor: pointer;
+}
+
+#submitoptionbutton{
+    min-height: 30px;
+    background-color: dodgerblue;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding:10px;
+}
+#submitoptionbutton:hover{
+    background-color: lightblue;
+}
+
+/*questions*/
+.question-container {
+  
+    padding: 30px;
+    margin-bottom: 20px;
+    border-radius: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 20px;
+    background: linear-gradient(to right, #d9afd9, #97d9e1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: flex;
+}
+.question-content{
+    width: calc(100% - 100px); 
+}
+
+.question-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.question-number, 
+.question-text {
+    margin-right: 10px;
+}
+
+.question-text{
+    resize: none;
+    height: 70px;
+    border: 1px solid dodgerblue;
+}
+
+.question-number {
+    font-weight: bold;
+}
+
+.question-text {
+    flex: 1; 
+}
+
+.question-number-input,.option-score{
+    padding: 8px;
+    border: none; 
+    border-radius: 5px;
+    background-color: none;
+    border: 1px solid dodgerblue; 
+}
+.option-score-container{
+    margin-left: 50px;
+}
+
+.question-number-input,.option-score{
+    max-width: 30px;
+    background-color: none;
+    border: 1px solid dodgerblue;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.option-score-container {
+    display: flex;
+    align-items: center;
+}
+
+.options-container{
+    display: flex;
+    align-items: center;
+}  
+
+.option-score-container label {
+    margin-right: 5px; 
+}
+.button-containers{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap:10px;
+    margin-left: 20px;
+}
+.option-text{
+    resize: none;
+    height: 50px;
+    border: dodgerblue;
+    width:400px;
+}
+
+.option-number, 
+.option-text, 
+.option-score {
+    margin-right: 10px; 
+}
+
+.option-number,.question-number{
+    min-width: 130px;
+}
+
+.option-score {
+    margin-left: auto; 
+}
+
+.delete-question {
+    width: 100px; 
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    background-color:#f54556;
+    color: #ffffff;
+}
+.delete-question:hover{
+    background-color: #c82333; 
+}
+
+.save-question,#activateexamination{
+    border: none;
+    background-color: dodgerblue;
+    color: #ffffff;
+    padding: 15px;
+    border-radius: 5px;
+}
+.save-question:hover,#activateexamination:hover{
+    background-color: lightblue;
+    cursor: pointer;
+    color: #000;
+}
+
+.form-column >div{
+    display: flex;
+    align-items: center;
+}
+/*adminaddsubjects*/
+.addsubjectnavbar{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 20px 20px;
+    margin-top: 50px;
+    background-color: #f2f2f2;
+    margin-left: 20px;
+    margin-right: 20px;
+    border-radius: 10px;
+}
+
+
+.addsubjectnavbar .form-column {
+    display: flex;
+    margin-right: 10px; 
+    gap:5px;
+    align-items: center;
+    font-size: 15px;
+}
+.form-column input,select{
+    height: 30px;
+    border-radius: 5px;
+    border: 1px solid lightblue;
+}
+.form-column select{
+    min-width: 150px;
+}
+
+/*seefeedback*/
+.getactivesubjects {
+    margin-top: 50px;
+    flex-direction: column;
+    display: flex;
+    gap: 10px;
+    margin-left: 40px;
+    margin-right: 40px;
+  }
+  
+  .subject-container {
+    background: linear-gradient(to right, #d3e3fc, #e0effc, #edf7fc, #f8f7fc, #e7e8f7);
+    padding: 10px 15px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer; 
+    transition: background-color 0.3s ease;
+    align-items: center;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .subject-container:hover {
+    background-color: #ffffff; 
+    transform: scale(1.02);
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  }
+
+/*show analysis*/
+.feedback-title{
+    margin-left: 30px;
+}

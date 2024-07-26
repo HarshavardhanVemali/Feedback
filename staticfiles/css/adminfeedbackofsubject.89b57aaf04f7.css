@@ -1,0 +1,95 @@
+.analysis-tabs {
+    display: flex;
+    justify-content: center; 
+    gap: 50px; 
+    margin-bottom: 20px; 
+  }
+  
+  .analysis-tab {
+    padding: 10px 15px;
+    border-radius: 5px; 
+    cursor: pointer;
+    border: none;
+    background-color: #ffff;
+  }
+  .analysis-tab:hover{
+    background: linear-gradient(to right, #d4fc79, #96e6a1);
+  }
+  .analysis-tab.active { 
+    background: linear-gradient(to right, #d4fc79, #96e6a1);
+  }
+  
+  .analysis-content {
+    padding: 20px;
+    border-radius: 5px;
+  }
+  .center-table {
+    margin: 0 auto; 
+}
+.analysis-table,
+.comments-table { 
+    border-radius: 10px;
+    width: 90%;
+    margin: 0 auto 20px auto; 
+    border-collapse: collapse;
+}
+
+.analysis-table thead, .analysis-table td ,.comments-table thead, .comments-table td {
+    padding: 12px;
+    text-align: left;
+    font-weight: 200;
+}
+
+.analysis-table thead,.comments-table thead {
+    background-color: #e6ffe6;
+    color: #000;
+}
+.analysis-table tbody tr:nth-child(even), .comments-table tbody tr:nth-child(even){ 
+    background-color: #f2f8ff;
+    transition: background-color 0.3s ease;
+    color: #0066cc;
+}
+
+.analysis-table tbody tr:nth-child(odd), .comments-table tbody tr:nth-child(odd) { 
+    background-color: #ffffff;
+    transition: background-color 0.3s ease;
+}
+
+.analysis-table tbody tr:hover,
+.comments-table tbody tr:hover { 
+    background-color: #f1f1f1;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+.question-analysis {
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+.question-content{
+    display: flex;
+    justify-content: space-between;
+}
+
+.options-display {
+    margin-bottom: 10px;
+}
+
+.options-display p {
+    margin: 5px 0;
+    min-width: 100px;
+    font-weight: 400;
+}
+.analysis-table td, .comments-table td {
+    padding: 12px;
+    text-align: left;
+    font-weight: 200;
+    border: 1px solid lightgray;
+}
+#total-average-rating-mid1, 
+#total-average-rating-mid2 {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  margin-right: 100px;
+  align-items: center;
+  gap: 5px;
+}

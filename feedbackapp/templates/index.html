@@ -30,8 +30,8 @@
         background-color: white;
         border-radius: 50%;
         opacity: 0;
-        animation: twinkle 3s infinite alternate; /* More natural twinkle */
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Glow effect */
+        animation: twinkle 3s infinite alternate; 
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); 
     }
 
     /* Different star sizes */
@@ -48,7 +48,7 @@
     @keyframes twinkle {
         0% { 
             opacity: 0; 
-            transform: scale(0.8); /* Add scaling for a subtle pulse */
+            transform: scale(0.8); 
         }
         100% { 
             opacity: 1; 
@@ -74,7 +74,7 @@
         </div>
     </div>
     <div>
-        <marquee id="text_scroll" behavior="scroll" direction="right to left" style="padding:5px 0 5px 0px;font-weight: 100;background-color:ghostwhite;">Welcome to Student Feedback Portal...</marquee>
+        <marquee id="text_scroll" behavior="scroll" direction="right to left" style="padding:5px 0 5px 0px;font-weight: 100;background-color:ghostwhite;color: #000;">Welcome to Student Feedback Portal...</marquee>
     </div>
     {% if student_name %}
     <div class="subnavbar">

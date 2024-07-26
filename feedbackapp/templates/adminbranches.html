@@ -34,8 +34,20 @@
         </div>
     </header>
     <main>
+        <div class="breadcrumb">
+            <a href="{% url 'adminstudents' %}">/Students</a> / 
+            {% if year_number%}
+                <span>Year {{ year_number }} / </span> 
+            {% endif %}
+        </div>
         <div class="subnav">
             <div class="addbranches">
+                <button id="backbutton" onclick="window.location.href='{% url 'adminstudents' %}'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                      <span>Back</span>
+                </button>
                 <button id="addbranchesbutton" onclick="showAddBrachesForm()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -43,6 +55,7 @@
                     </svg>
                     <span>Add Branches</span>
                 </button>
+                
             </div>
             <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
                 <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -221,7 +234,7 @@
                     `;
                     branchesContainer.appendChild(branchDiv);
                     branchDiv.addEventListener('click', () => {
-                        redirectToSectionPage(branch.code);
+                        redirectToSectionPage(branch.code,branch.name);
                     });
                 });
                 populateEditTable(data);
@@ -231,7 +244,7 @@
                 console.error('Error fetching branches:', error);
         });
     }
-    function redirectToSectionPage(branchCode) {
+    function redirectToSectionPage(branchCode, branchName) {
         if (!yearNumber) {
             console.error('yearNumber is not defined');
             return;
@@ -239,6 +252,7 @@
         const url = new URL('/adminsections.html', window.location.origin);
         url.searchParams.append('branch_code', branchCode);
         url.searchParams.append('year', yearNumber);
+        url.searchParams.append('branch_name', branchName);
         window.location.href = url.href;
     }
     function populateEditTable(data) {

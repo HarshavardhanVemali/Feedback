@@ -241,7 +241,12 @@ def deletefaculty(request):
 
 @login_required(login_url='/amdinlogin/')
 def adminbranches(request):
-    return render(request,'adminbranches.html')
+    year_number = request.GET.get('year')
+
+    context = {
+         'year_number': year_number,
+     }
+    return render(request, 'adminbranches.html', context)
 
 @login_required(login_url='/adminlogin/')
 def adminstudents(request):
@@ -254,13 +259,15 @@ def addyear(request):
         if request.POST.get('form_type') == 'addyearsform':
             yearnumber=request.POST.get('yearnumber')
             yearname=request.POST.get('yearname')
+            academicyear=request.POST.get('academicyear')
             try:
                 check_year=StudyingYear.objects.filter(studying_year =yearnumber)
                 if check_year:
                     return JsonResponse({'success': False, 'error': f'{yearnumber} already exists'})
                 year = StudyingYear.objects.create(
                     studying_year=yearnumber,
-                    studying_year_name=yearname
+                    studying_year_name=yearname,
+                    academic_year=academicyear
                 )
                 if year:
                     return JsonResponse({'success': True})
@@ -279,6 +286,7 @@ def getyears(request):
             year_data.append({
                 'year_number': year.studying_year,
                 'year_name': year.studying_year_name,
+                'academic_year':year.academic_year
             })
         return JsonResponse(year_data, safe=False)
     return JsonResponse({'success': False, 'error': 'Invalid request method or form type.'})
@@ -291,10 +299,12 @@ def saveyearchanges(request):
         year_number=data.get('year_number')
         new_year_number=data.get('new_year_number')
         year_name=data.get('year_name')
+        academic_year=data.get('academic_year')
         current_year = StudyingYear.objects.get(studying_year=year_number)
         if current_year:
             current_year.studying_year=new_year_number
             current_year.studying_year_name=year_name
+            current_year.academic_year=academic_year
             current_year.save()
         return JsonResponse({'success':True})
     except Departments.DoesNotExist:
@@ -1382,7 +1392,8 @@ def getstudentsforexam(request):
                 student_data = {
                     'Register Number': student.student_id,
                     'Name': student.student_name,
-                    'Year of study': student.studying_year.studying_year_name,  
+                    'Semester':student.studying_year.studying_year_name,
+                    'Academic Year':student.studying_year.academic_year, 
                     'Department': student.department.department_name,         
                     'Branch': student.branch.branch_name,
                     'Section': student.section.section_name,

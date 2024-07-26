@@ -65,7 +65,21 @@
     min-width: 150px;
     max-width: 150px;
 }
+.breadcrumb{
 
+    margin-top: 10px;
+    font-size: 20px;
+    margin-left: 40px;
+    margin-bottom: 10px;
+    color: #000;
+ }
+.breadcrumb a{
+    color:var(--fgColor-accent, var(--color-accent-fg, #0969da));
+    text-decoration: none;
+}
+.breadcrumb a:hover{
+    text-decoration: underline;
+}
 .form-row input[type="text"],
 .form-row input[type="number"],textarea{
     width: 50%;
@@ -234,6 +248,7 @@ width:400px;
     border-radius: 5px;
     display: flex;
     align-items: center;
+    cursor: pointer;
 }
 .move-right:hover{
     background-color: lightblue;

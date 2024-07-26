@@ -67,13 +67,13 @@
                         <input type="text" name="facultyname" id="facultyname" placeholder="Name" required>
                     </div>
                     <div id="form-row">
-                        <label for="registernumber">Register Number</label>
+                        <label for="registernumber">ID Number</label>
                         <input type="text" name="registernumber" id="registernumber" placeholder="Register Number" required>
                     </div>
                     <div id="form-row">
                         <label for="department">Department</label>
                         <select name="department" id="department" required>
-                            <option value="">Select Department</option> 
+                            <option value="" disabled selected>Select Department</option> 
                         </select>
                     </div>
                     <div id="form-row">
@@ -112,7 +112,6 @@
             const Department = document.querySelector('#departments');
             const departmentSelect = document.getElementById('department');
             Department.innerHTML = '';
-            departmentSelect.innerHTML = '';
             data.forEach(department => {
                 const departmentdiv = document.createElement('div');
                 departmentdiv.className = 'department';   
@@ -132,7 +131,6 @@
                 option.value = department.code;
                 option.text = `${department.name}`;
                 departmentSelect.add(option);
-                
                 Department.appendChild(departmentdiv);
             });
         })

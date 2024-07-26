@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-2n=ks6h*a185(uv)vjwo!f42mhj)$^@0w!^ms!we7q3jm=9os*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG =True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -89,8 +89,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-DATABASES["default"]=dj_database_url.parse("postgresql://feedback_0zis_user:gYLKX0144kCP4oDbtfS8Jgd0vfAFD5Il@dpg-cqgk866ehbks738v1usg-a.oregon-postgres.render.com/feedback_0zis")
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

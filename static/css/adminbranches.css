@@ -10,9 +10,25 @@
     z-index: 1000;
     opacity: 1;
 }
+.breadcrumb{
+
+    margin-top: 10px;
+    font-size: 20px;
+    margin-left: 40px;
+    margin-bottom: 10px;
+    color: #000;
+ }
+.breadcrumb a{
+    color: var(--fgColor-accent, var(--color-accent-fg, #0969da));
+    text-decoration: none;
+}
+.breadcrumb a:hover{
+    text-decoration: underline;
+}
 #editbutton {
     display: flex;
     align-items: center;
+    cursor: pointer;
 }
 .move-right {
     margin-left: auto; 
@@ -22,6 +38,7 @@
     border-radius: 5px;
     display: flex;
     align-items: center;
+    cursor: pointer;
 }
 .move-right:hover{
     background-color: lightblue;
@@ -53,6 +70,7 @@
 .button-container {
     display: flex;
     justify-content: center;
+    cursor: pointer;
 }
 .branchestablecontainer{
     display: flex;

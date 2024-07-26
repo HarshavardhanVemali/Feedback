@@ -31,7 +31,6 @@
             </ul>
         </div>
     </header>
-    <marquee id="text_scroll" behavior="scroll" direction="right to left" style="padding:5px 0 5px 0px;font-weight: 100;background-color:ghostwhite;">All question should have equal number of options</marquee>
     <main>
         <div class="subnav">
             <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
@@ -128,7 +127,23 @@
             ExamCode = urlParams.get('exam_code');
             getquestions(ExamCode);
             getmaximumoptions();
+            const searchInput = document.querySelector('.search input');
+            searchInput.addEventListener('input', filterQuestions); 
         });
+        function filterQuestions() {
+            const searchText = this.value.toLowerCase();
+            const questionDivs = document.querySelectorAll('.question-container');
+
+            questionDivs.forEach(questionDiv => {
+                const questionText = questionDiv.querySelector('.question-text').value.toLowerCase();
+
+                if (questionText.includes(searchText)) {
+                    questionDiv.style.display = '';
+                } else {
+                    questionDiv.style.display = 'none'; 
+                }
+            });
+        }
         function getmaximumoptions(){
             fetch('/getmaximumoptions/',{
                 method:'POST',

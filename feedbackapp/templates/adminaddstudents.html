@@ -36,6 +36,7 @@
         </div>
     </header>
     <main>
+        <div class="breadcrumb"> </div> 
         <div class="subnavlinks">
             <button id="students-container" onclick="toggleContent('students')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus">
@@ -161,7 +162,7 @@
                         <thead>
                             <th>Register Number</th>
                             <th>Name</th>
-                            <th>Year</th>
+                            <th>Semester</th>
                             <th>Department</th>
                             <th>Branch</th>
                             <th>Section</th>
@@ -188,6 +189,7 @@
                     </button>
                 </div>  
             </div>
+            <p style="margin-left: 20px;">Add subjects</p>
             <div class="addsubjectnavbar">
                 <form method="post" id="addsubjectform" action="{% url 'addsubject' %}"> 
                     {% csrf_token %}
@@ -220,7 +222,6 @@
                 </form>
             </div>
             <div class="showsubjects">
-                
                 <div class="activate-examination" style="display: flex; justify-content: center;gap: 20px;align-items: center;">
                     <div class="selectexams">
                         <select name="exam" id="selectedexam">
@@ -328,17 +329,48 @@
         let sectionNumber;
         let branchCode;
         let yearNumber;
+        let sectionName;
+        let branchName;
         document.addEventListener('DOMContentLoaded', () => {
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
             branchCode = urlParams.get('branch_code');
             yearNumber = urlParams.get('year');
             sectionNumber = urlParams.get('section_number');
+            sectionName=urlParams.get('section_name')
+            branchName = urlParams.get('branch_name');
             getStudents();
             getDepartments();
             getsubjects();
             getactivefeedbackexams();
+            updateBreadcrumbs(yearNumber, branchName, sectionNumber, sectionName); 
+            const searchInput = document.querySelector('.search input');
+            searchInput.addEventListener('input', filterStudents); 
         });
+        function filterStudents() {
+            const searchText = this.value.toLowerCase(); 
+            const tableRows = document.querySelectorAll('#studentstable tbody tr');
+
+            tableRows.forEach(row => {
+                const registerNumber = row.querySelector('td:first-child').textContent.toLowerCase();
+                const studentName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+
+                if (registerNumber.includes(searchText) || studentName.includes(searchText)) {
+                    row.style.display = ''; 
+                } else {
+                    row.style.display = 'none'; 
+                }
+            });
+        }
+        function updateBreadcrumbs(yearNumber, branchName, sectionNumber, sectionName) {
+            const breadcrumbContainer = document.querySelector('.breadcrumb');
+            breadcrumbContainer.innerHTML = `
+                <a href="{% url 'adminstudents' %}">/Students</a> / 
+                <a href="/adminbranches/?year=${yearNumber}">Year ${yearNumber}</a> /
+                ${branchName ? `<a href="/adminsections.html?year=${yearNumber}&branch_code=${branchCode}&branch_name=${branchName}">${branchName}</a> /` : ''} 
+                ${sectionName ? `<span>${sectionName}</span>` : ''} 
+            `;
+        }
         function getDepartments() {
             fetch('/getdepartments/', {
                 method: 'POST',
@@ -455,7 +487,6 @@
             .then(response => response.json())
             .then(data => {
                 const examSelect = document.getElementById('selectedexam');
-                examSelect.innerHTML = ''; 
                 if (data.length === 0) {
                     const option = document.createElement('option');
                     option.value = "";

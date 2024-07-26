@@ -25,7 +25,6 @@ urlpatterns = [
     path('deletefaculty/',views.deletefaculty,name='deletefaculty'),
     path('adminbranches/',views.adminbranches,name='adminbranches'),
     path('adminstudents/',views.adminstudents,name='adminstudents'),
-    path('adminbranches.html', TemplateView.as_view(template_name='adminbranches.html'), name='adminbranches'),
     path('adminsections.html', TemplateView.as_view(template_name='adminsections.html'), name='adminsections'),
     path('adminsections/',views.adminsections,name='adminsections'),
     path('addbranches/',views.addbranches,name='addbranches'),
