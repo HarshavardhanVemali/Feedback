@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Overall Feedback Report</title>
+    <style>
+        body {
+            font-family: sans-serif; 
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        @media print {
+            body {
+                margin: 1cm; /* Set page margins */
+            }
+
+            table {
+                page-break-after: always; /* Force a page break after the table */
+            }
+
+            /* Add more print-specific styles as needed */
+        }
+    </style>
+</head>
+</head>
+<body>
+    <div id="report-container">
+        {% if department_logo_url %} 
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="{{ department_logo_url }}" alt="Department Logo" style="max-width: 100px; height: auto;">
+                <h2>{{ department_name }}</h2>
+                <h3>Overall Feedback Report - {{ sem }} ({{ academic_year }})</h3>
+                <h4>Mid - {{ selected_mid }}</h4>
+            </div>
+            <div id="report-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Faculty Name</th>
+                            <th>Average Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in feedback_data %}
+                            <tr>
+                                <td>{{ item.subject_code }}</td>
+                                <td>{{ item.subject_name }}</td>
+                                <td>{{ item.faculty_name }}</td>
+                                <td>{{ item.average_rating }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %} 
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Check if data is available for printing
+            var reportContent = document.getElementById('report-content');
+            if (reportContent) {
+                // Set page orientation to landscape
+                var style = document.createElement('style');
+                style.innerHTML = '@page { size: landscape; }';
+                document.head.appendChild(style);
+        
+                window.print(); 
+            }
+        };
+    </script>
+</body>
+</html>

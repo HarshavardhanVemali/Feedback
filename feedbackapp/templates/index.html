@@ -34,7 +34,6 @@
         box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); 
     }
 
-    /* Different star sizes */
     .star:nth-child(-n+10) { 
         width: 3px; 
         height: 3px; 
@@ -65,11 +64,11 @@
         </div>
         <div id="college_sub_title">
             <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
-            <h1 id="dept_name">Department Of Data Engineering</h1>
+            <h1 id="dept_name"></h1>
         </div>
         <div id="department_logo">
             <a href="" target="_parent">
-                <img src="{% static 'images/department_logo.png' %}" alt="college_logo">
+                <img src="" alt="Department Logo"> 
             </a>
         </div>
     </div>
@@ -114,8 +113,9 @@
         </div>
     </div>
     <div class="showsubjects">
+        <h2 style="text-align: center;">Your Subjects</h2>
         <div id="subjects-list">
-            
+
         </div>
     </div>
     <div class="background-stars"></div>
@@ -185,6 +185,37 @@
         })
         .catch(error => {
             console.error('There has been a problem with your fetch operation:', error);
+        });
+    }
+    function getdepartmentdetails() {
+        const studentId = "{{ register_number }}"; 
+        fetch('/getdepartmentdeatils/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') 
+            },
+            body: JSON.stringify({
+                student_id: studentId
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not OK');
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('dept_name').textContent = "Department Of " + data.department_name;
+            const departmentLogoImg = document.querySelector('#department_logo img'); 
+            if (data.department_logo) {
+                departmentLogoImg.src = data.department_logo;
+            } else {
+                departmentLogoImg.style.display = 'none'; 
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching department details:', error);
         });
     }
     function showOverlay() {
@@ -270,6 +301,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         getsubjects();
         createStars();
+        getdepartmentdetails();
     });
     
     function getCookie(name) {

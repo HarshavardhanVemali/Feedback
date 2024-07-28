@@ -96,7 +96,7 @@
             Comments
           </button>
         </div>
-        <div id="total-average-rating-mid1"></div>
+        <div id="total-average-rating-mid1"></div> 
         <div class="analysis-content" id="question-analysis-mid1"></div>
         <div class="analysis-content" id="comments-analysis-mid1"></div>
       </div>
@@ -119,7 +119,7 @@
             Comments
           </button>
         </div>
-        <div id="total-average-rating-mid2"></div>
+        <div id="total-average-rating-mid2"></div> 
         <div class="analysis-content" id="question-analysis-mid2"></div>
         <div class="analysis-content" id="comments-analysis-mid2"></div>
       </div>
@@ -224,36 +224,54 @@
           alert("Error fetching analysis data.");
         });
     }
+    function createStarRating(rating) {
+        const starTotal = 5;
+        const fullStars = Math.floor(rating);
+        const halfStarValue = rating - fullStars;
+        const stars = [];
+        for (let i = 0; i < fullStars; i++) {
+            stars.push('<span style="color: orange;">★</span>');
+        }
+        if (halfStarValue > 0) {
+            const percentage = Math.floor(halfStarValue * 100);
+            stars.push(`
+                <span style="position: relative; display: inline-block;">
+                    <span style="color: orange; overflow: hidden; width: ${percentage}%; position: absolute;">★</span>
+                    <span style="color: lightgrey;">★</span>
+                </span>
+            `);
+        }
+        for (let i = stars.length; i < starTotal; i++) {
+            stars.push('<span style="color: lightgrey;">★</span>');
+        }
+        return stars.join('');
+    }
     function getOverallRating(midterm) {
-      fetch("/get_overall_rating/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
-        },
-        body: JSON.stringify({
-          branch_code: branchCode,
-          year_of_study: yearNumber,
-          subject_code: subjectCode,
-          section_number: sectionNumber,
-          mid_term: midterm,
-        }),
+  fetch("/get_overall_rating/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify({
+        branch_code: branchCode,
+        year_of_study: yearNumber,
+        subject_code: subjectCode,
+        section_number: sectionNumber,
+        mid_term: midterm,
+      }),
       })
         .then((response) => response.json())
         .then((data) => {
-          const ratingDiv = document.getElementById(
-            `total-average-rating-mid${midterm}`
-          );
-          if (data.overall_rating !== undefined) {
-            ratingDiv.innerHTML = `
-                    <strong>Total Average Rating (Mid-${midterm}):</strong> ${data.overall_rating.toFixed(
-              2
-            )} 
+            if (typeof data.overall_rating === 'number' && !isNaN(data.overall_rating)) {
+                const totalAverageRatingDiv = document.getElementById(`total-average-rating-mid${midterm}`);
+                totalAverageRatingDiv.innerHTML = `
+                    <strong>Total Average Rating (Mid-${midterm}):</strong> ${data.overall_rating.toFixed(2)} 
                     ${createStarRating(data.overall_rating)}
                 `;
-          } else {
-            ratingDiv.innerHTML = `<strong>Total Average Rating (Mid-${midterm}):</strong> No ratings yet`;
-          }
+            } else {
+                console.error("Invalid or missing overall_rating in response:", data);
+            }
         })
         .catch((error) => {
           console.error("Error fetching overall rating:", error);
@@ -281,7 +299,6 @@
     }
     window.onload = () => {
       toggleContent("mid1");
-      getOverallRating(1);
     };
 
     function displayQuestionAnalysis(analysisData, midterm) {

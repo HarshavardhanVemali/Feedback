@@ -15,6 +15,9 @@ from django.utils import timezone
 from django.db import models
 from django.contrib.auth import logout
 from django.db.models import Avg
+from django.template.loader import render_to_string
+from django.http import JsonResponse, HttpResponse 
+from weasyprint import HTML
 
 MAX_FAILED_ATTEMPTS = 3
 def set_device_cookie(response, device_id):
@@ -1344,6 +1347,89 @@ def admin_logout_view(request):
     logout(request)
     return redirect('adminlogin')
 
+@login_required(login_url='/adminlogin/')
+def downloadoverallreporthtml(request):
+    return render(request,'downloadoverallreport.html')
+
+@login_required(login_url='/adminlogin/')
+@require_POST
+def downloadoverallreport(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            year_number = data.get('year_number')
+            branch_code = data.get('branch_code')
+            section_number = data.get('section_number')
+            selected_mid = data.get('selected_mid')
+
+            if not all([year_number, branch_code, section_number, selected_mid]):
+                return JsonResponse({'success': False, 'error': 'Missing required fields.'})
+
+            section = Section.objects.get(
+                studying_year__studying_year=year_number,
+                branch__branch_code=branch_code,
+                section_number=section_number
+            )
+            department = Departments.objects.get(department_code=section.branch.department.department_code)
+            department_name = department.department_name
+            department_logo_url = department.department_logo.url if department.department_logo else None
+            sem = section.studying_year.studying_year_name
+            academic_year = section.studying_year.academic_year
+            subjects = Subject.objects.filter(section=section)
+
+            feedback_data = []
+            for subject in subjects:
+                feedbacks = Feedback.objects.filter(subject=subject, section=section)
+                total_rating = 0
+                feedback_count = 0
+
+                for feedback in feedbacks:
+                    if selected_mid == '1' and feedback.mid_term_1_rating:
+                        total_rating += feedback.mid_term_1_rating
+                        feedback_count += 1
+                    elif selected_mid == '2' and feedback.mid_term_2_rating:
+                        total_rating += feedback.mid_term_2_rating
+                        feedback_count += 1
+
+                average_rating = total_rating / feedback_count if feedback_count else 0
+                faculty_name = subject.faculty
+
+                feedback_data.append({
+                    'subject_code': subject.subject_code,
+                    'subject_name': subject.subject_name,
+                    'faculty_name': faculty_name,
+                    'average_rating': average_rating
+                })
+
+            context = {
+                'feedback_data': feedback_data,
+                'department_name': department_name,
+                'department_logo_url': department_logo_url,
+                'sem': sem,
+                'academic_year': academic_year,
+                'selected_mid': selected_mid
+            }
+
+            # Render the template to a string
+            html_string = render(request, 'downloadoverallreport.html', context).content.decode('utf-8')
+            
+            # Create a PDF from the rendered HTML
+            pdf = HTML(string=html_string).write_pdf()
+
+            # Serve the PDF as a file download
+            response = HttpResponse(pdf, content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="overall_report.pdf"'
+            return response
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
+        except Section.DoesNotExist:
+            return JsonResponse({'error': 'Section not found.'}, status=404)
+
+    else:
+        return render(request, 'downloadoverallreport.html')
+
+
 #students
 
 @login_required(login_url='/studentlogin/')
@@ -1401,6 +1487,31 @@ def getstudentsforexam(request):
                 return JsonResponse(student_data)
             else:
                 return JsonResponse({'error': 'Missing student_id parameter.'}, status=400) 
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    else:
+        return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+@login_required(login_url='/studentlogin/')
+@csrf_exempt
+@require_POST
+def getdepartmentdeatils(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            student_id = data.get('student_id')
+            if student_id:
+                student = Student.objects.get(student_id=student_id)
+                department = student.department
+                department_data = {
+                    'department_name': department.department_name,
+                    'department_logo': department.department_logo.url if department.department_logo else None
+                }
+                return JsonResponse(department_data)
+            else:
+                return JsonResponse({'error': 'Missing student_id parameter.'}, status=400)
+        except Student.DoesNotExist: 
+            return JsonResponse({'error': 'Student not found.'}, status=404)
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     else:

@@ -64,6 +64,12 @@
                 <button class="analysis-tab" onclick="showAnalysis('student-analysis-mid1')">Student Wise</button>
                 <button class="analysis-tab" onclick="showAnalysis('question-analysis-mid1')">Question Wise</button>
                 <button class="analysis-tab" onclick="showAnalysis('comments-analysis-mid1')">Comments</button>
+                <button class="analysis-tab" id="printbutton" onclick="showAnalysis('download-analysis-mid1')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 8h-4V3H9v5H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                    </svg>
+                    Download Report
+                </button>
             </div>
             <div id="total-average-rating-mid1"></div> 
             <div class="analysis-content" id="student-analysis-mid1"></div>
@@ -79,6 +85,12 @@
                 <button class="analysis-tab" onclick="showAnalysis('student-analysis-mid2')">Student Wise</button>
                 <button class="analysis-tab" onclick="showAnalysis('question-analysis-mid2')">Question Wise</button>
                 <button class="analysis-tab" onclick="showAnalysis('comments-analysis-mid2')">Comments</button>
+                <button class="analysis-tab" id="printbutton" onclick="showAnalysis('download-analysis-mid2')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 8h-4V3H9v5H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                    </svg>
+                    Download Report
+                </button>
             </div>
             <div id="total-average-rating-mid2"></div> 
             <div class="analysis-content" id="student-analysis-mid2"></div>
@@ -107,7 +119,7 @@
         const mid2Content = document.getElementById('mid2-content');
         const analysisTabs = document.querySelectorAll('.analysis-tab'); 
 
-        // Hide all analysis content and remove active class from tabs
+        
         analysisTabs.forEach(tab => { 
             tab.classList.remove('active');
         });
@@ -116,7 +128,6 @@
             content.style.display = 'none';
         });
 
-        // Show the selected mid-term content
         if (target === 'mid1') {
             mid1Content.style.display = 'block';
             mid2Content.style.display = 'none';
@@ -130,7 +141,7 @@
         const analysisContents = document.querySelectorAll('.analysis-content');
         const analysisTabs = document.querySelectorAll('.analysis-tab'); 
 
-        // Hide all analysis content and remove active class from tabs
+        
         analysisContents.forEach(content => {
             content.style.display = 'none'; 
         });
@@ -146,8 +157,6 @@
         } else if (analysisId.startsWith('comments')) {
             getstudentcomments(midtermNumber);
         } 
-
-        // Show the selected analysis content and set the clicked tab to active
         document.getElementById(analysisId).style.display = 'block';
         event.target.classList.add('active'); 
     }

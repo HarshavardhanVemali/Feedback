@@ -102,6 +102,31 @@ max-width: 200px;
     display: flex;
     justify-content: center;
 }
+#printbutton svg {
+    width: 20px;
+    height: 20px;
+}
+.printbutton form{
+    display: flex;
+    align-items: center;
+    margin-left: 40px;
+    gap: 5px;
+    
+}
+#printbutton{
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    background: linear-gradient(to right, #e0f7fa, #80deea);;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    transition: transform 0.3s ease-in-out;
+}
+#printbutton:hover{
+    transform: scale(1.01);
+}
+
 
 #addmultipleuserbutton,#addsingleuserbutton,#addquestionbutton,#addsubjectbutton{
     width: 100px;
@@ -531,7 +556,7 @@ width:400px;
   
   .subject-container {
     background: linear-gradient(to right, #d3e3fc, #e0effc, #edf7fc, #f8f7fc, #e7e8f7);
-    padding: 10px 15px;
+    padding: 15px;
     border-radius: 10px;
     display: flex;
     justify-content: space-between;

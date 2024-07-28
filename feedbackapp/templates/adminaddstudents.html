@@ -271,6 +271,21 @@
         </div>
         <div class="seefeedback-container" id="seefeedback-content">
             <div class="subnav">
+                <div class="printbutton">
+                    <form id="downloadoverallreportform">
+                        <select name="selectmid" id="selectmid" required>
+                            <option value="" disabled selected>Select-Mid&nbsp;</option>
+                            <option value="1">Mid-1</option>
+                            <option value="2">Mid-2</option>
+                        </select>
+                        <button id="printbutton" type="submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 8h-4V3H9v5H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                            </svg>
+                            <span>Download Overall Report</span>
+                        </button>
+                    </form>
+                </div>
                 <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
                     <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -865,6 +880,52 @@
             })
             .catch(error => console.error('Error:',error))
         }
+        document.getElementById('downloadoverallreportform').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const selected_mid = document.getElementById('selectmid').value;
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const branchCode = urlParams.get('branch_code');
+            const yearNumber = urlParams.get('year');
+            const sectionNumber = urlParams.get('section_number');
+
+            fetch('/downloadoverallreport/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    'year_number': yearNumber,
+                    'branch_code': branchCode,
+                    'section_number': sectionNumber,
+                    'selected_mid': selected_mid
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.blob(); // Get the response as a Blob
+            })
+            .then(blob => {
+                // Create a download link and trigger the download
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'overall_feedback_report.csv'; 
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a); 
+            })
+            .catch(error => {
+                console.error('Error downloading report:', error);
+                alert('An error occurred while downloading the report.');
+            });
+        });
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
