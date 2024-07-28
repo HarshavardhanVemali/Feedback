@@ -189,7 +189,7 @@ body {
     position: absolute;
     border-radius: 50%;
     opacity: 0.8;
-    background: linear-gradient(135deg, #078EFB, #AC87EB, #EE4D5D); /* Gradient */
+    background: linear-gradient(135deg, #078EFB, #AC87EB, #EE4D5D); 
     animation: moveRightToLeft linear infinite; 
 }
 

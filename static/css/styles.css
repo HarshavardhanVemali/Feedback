@@ -18,6 +18,11 @@ body {
     transition: background-color 0.3s ease;
     font-family: Google Sans, Helvetica Neue, sans-serif;
 }
+.main {
+    flex-grow: 1; 
+    min-height: 100vh; 
+}
+
 
 #college_title {
     background: linear-gradient(45deg, #F5F5F5, #FFD700, #FFA07A);
@@ -354,4 +359,47 @@ body {
 }
 #submit-feedback:hover{
     background-color: lightblue;
+}
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+footer {
+    background-color: #222;
+    color: #fff; 
+    text-align: center;
+    font-size: 12px;
+    font-weight: 400;
+}
+footer{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+footer img{
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+    
+}
+footer a{
+    color: #ffffff;
+}
+#viewportfolio{
+    text-decoration: none;
+}
+#viewportfolio{
+    background: linear-gradient(180deg, #4285f4, #ea4335);
+    border-radius: 20px;
+    font-size: 8px;
+    padding: 5px;
+    cursor: pointer;
+    color: white;
+    margin-left: 2px;
+}
+#viewportfolio:hover{
+    background-color: white;
+    color: white;
 }
