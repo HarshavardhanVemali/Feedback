@@ -94,7 +94,9 @@ Contributions are welcome! Please follow these steps:
 
 ## License
 
-This project is licensed under the [License Name] license. See the [LICENSE] file for details.
+This software is provided for informational purposes only. You may not modify,
+reproduce, distribute, or use this software for any other purpose without the 
+express written permission of Vemali Harshavardhan.
 
 ## Contact
 
