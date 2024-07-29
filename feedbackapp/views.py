@@ -965,7 +965,7 @@ def getsubject(request):
             return JsonResponse({'error': 'Section not found.'}, status=404)
         except Subject.DoesNotExist:
             return JsonResponse({'error': 'Subject not found.'}, status=404)
-            return JsonResponse({'error': 'Invalid branch, year, or section.'}, status=400)
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 
 @login_required(login_url='/adminlogin/')
