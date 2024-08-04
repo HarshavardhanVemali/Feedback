@@ -43,7 +43,7 @@ Feedback Portal is a comprehensive feedback platform designed specifically for c
 
 ## Call to Action
 
-Feedback Portal can transform the way colleges collect, manage, and leverage feedback. [https://harshavardhanvemali.netlify.app] to learn more about how our platform can empower your institution.
+Feedback Portal can transform the way colleges collect, manage, and leverage feedback. https://harshavardhanvemali.netlify.app to learn more about how our platform can empower your institution.
 
 ## Screenshots / Mockups
 
