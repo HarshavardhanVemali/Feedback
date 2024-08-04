@@ -109,7 +109,5 @@ express written permission of Vemali Harshavardhan.
 
 **Notes:**
 
-- **Replace the bracketed information with your project's specific details.**
-- **Use Markdown formatting for headings, lists, code blocks, and links.**
-- **Include a screenshot or two to showcase your project's functionality.**
+- **Replace the information with your project's specific details.**
 - **Consider adding a "Usage" section if your project has specific commands or functionalities.** 
