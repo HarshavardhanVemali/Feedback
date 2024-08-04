@@ -17,7 +17,11 @@ from django.contrib.auth import logout
 from django.db.models import Avg
 from django.template.loader import render_to_string
 from django.http import JsonResponse, HttpResponse 
-from weasyprint import HTML
+from io import BytesIO
+from django.template.loader import get_template
+import logging
+from xhtml2pdf import pisa
+import base64
 
 MAX_FAILED_ATTEMPTS = 3
 def set_device_cookie(response, device_id):
@@ -942,22 +946,20 @@ def getsubject(request):
             year_number = data.get('year_number')
             section_number = data.get('section_number')
             branch = Branches.objects.get(branch_code=branch_code, studying_year__studying_year=year_number)
-            section = Section.objects.get(section_number=section_number,branch__branch_code=branch_code,studying_year__studying_year=year_number)
-            subjects = Subject.objects.filter(section=section, studying_year=year_number, branch=branch)
+            section = Section.objects.get(section_number=section_number, branch=branch, studying_year=branch.studying_year)
+            subjects = Subject.objects.filter(section=section, branch=branch, studying_year=branch.studying_year)
             subjects_data = []
             for subject in subjects:
-                faculty = Subject.objects.get(subject_code=subject.subject_code,section=section,studying_year=year_number,branch=branch)
-                faculty=faculty.faculty
-                faculty_code = Faculty.objects.get(faculty_id=faculty) 
-                faculty_name = faculty_code.faculty_name
-                faculty_department = faculty_code.department.department_name
+                faculty = subject.faculty
+                faculty_info = Faculty.objects.get(id=faculty.id) 
+                faculty_name = faculty_info.faculty_name
+                faculty_department = faculty_info.department.department_name
                 subjects_data.append({
                     'subject_code': subject.subject_code,
                     'subject_name': subject.subject_name,
-                    'subject_faculty_name': f"{faculty.username}({faculty_name})",
+                    'subject_faculty_name': f"{faculty_name}",
                     'subject_facultydepartment': faculty_department
                 })
-
             return JsonResponse({'subjects': subjects_data}, safe=False)
         except Branches.DoesNotExist:
             return JsonResponse({'error': 'Branch not found.'}, status=404)
@@ -965,7 +967,9 @@ def getsubject(request):
             return JsonResponse({'error': 'Section not found.'}, status=404)
         except Subject.DoesNotExist:
             return JsonResponse({'error': 'Subject not found.'}, status=404)
-            return JsonResponse({'error': 'Invalid branch, year, or section.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 
 @login_required(login_url='/adminlogin/')
@@ -1059,78 +1063,80 @@ def deletesubject(request):
 @csrf_exempt
 @require_POST
 def activatefeedback(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            branch_code = data.get('branch_code')
-            year_number = data.get('year_number')
-            section_number = data.get('section_number')
-            action = data.get('action')
-            mid_term = int(data.get('mid_term'))
+    try:
+        data = json.loads(request.body)
+        branch_code = data.get('branch_code')
+        year_number = data.get('year_number')
+        section_number = data.get('section_number')
+        action = data.get('action')
+        mid_term = int(data.get('mid_term'))
 
-            branch = Branches.objects.get(branch_code=branch_code, studying_year__studying_year=year_number)
-            section = Section.objects.get(branch=branch, section_number=section_number)
-            subjects = Subject.objects.filter(
-                section=section,
-                studying_year=branch.studying_year,
-            )
-            if mid_term == 1:
-                for subject in subjects:
-                    if action == 'activate':
-                        if subject.midterm1_active:
-                            return JsonResponse({'error': f'Midterm 1 for all is already activated.'}, status=400)
-                        elif subject.midterm2_active:
-                            return JsonResponse({'error': f'Midterm 2 for all is active. Please deactivate Midterm 2 first.'}, status=400)
-                        elif subject.midterm1_deactivate:
-                            return JsonResponse({'error': f'Midterm 1 for all has been deactivated and cannot be activated again.'}, status=400)
-                        else:
-                            subject.midterm1_active = True
-                            subject.midterm1_activated_at = timezone.now()
-                            subject.save()
-                    elif action == 'deactivate':
-                        if not subject.midterm1_active:
-                            return JsonResponse({'error': f'Midterm 1 for all is already deactivated.'}, status=400)
-                        else:
-                            subject.midterm1_active = False
-                            subject.midterm1_deactivate = timezone.now()
-                            subject.save()
-                    else:
-                        return JsonResponse({'error': 'Invalid action.'}, status=400)
+        if not all([branch_code, year_number, section_number, action, mid_term]):
+            return JsonResponse({'error': 'Missing required fields.'}, status=400)
 
-            elif mid_term == 2:
-                for subject in subjects:
-                    if action == 'activate':
-                        if subject.midterm2_active:
-                            return JsonResponse({'error': f'Midterm 2 for all is already activated.'}, status=400)
-                        elif subject.midterm1_active:
-                            return JsonResponse({'error': f'Midterm 1 for all is active. Please deactivate Midterm 1 first.'}, status=400)
-                        elif subject.midterm2_deactivate:
-                            return JsonResponse({'error': f'Midterm 2 for all has been deactivated and cannot be activated again.'}, status=400)
-                        else:
-                            subject.midterm2_active = True
-                            subject.midterm2_activated_at = timezone.now()
-                            subject.save()
-                    elif action == 'deactivate':
-                        if not subject.midterm2_active:
-                            return JsonResponse({'error': f'Midterm 1 for all is already deactivated.'}, status=400)
-                        else:
-                            subject.midterm1_active = False
-                            subject.midterm2_deactivate = timezone.now()
-                            subject.save()
+        branch = Branches.objects.get(branch_code=branch_code, studying_year__studying_year=year_number)
+        section = Section.objects.get(branch=branch, section_number=section_number)
+        subjects = Subject.objects.filter(section=section, studying_year=branch.studying_year)
+        if not subjects.exists():  
+            return JsonResponse({'error':'No subjects found to activate/deactivate.'},status=400)
+
+        if mid_term == 1:
+            for subject in subjects:
+                if action == 'activate':
+                    if subject.midterm1_active:
+                        return JsonResponse({'error': 'Midterm 1 for all is already activated.'}, status=400)
+                    elif subject.midterm2_active:
+                        return JsonResponse({'error': 'Midterm 2 for all is active. Please deactivate Midterm 2 first.'}, status=400)
+                    elif subject.midterm1_deactivate:
+                        return JsonResponse({'error': 'Midterm 1 for all has been deactivated and cannot be activated again.'}, status=400)
                     else:
-                        return JsonResponse({'error': 'Invalid action.'}, status=400)
+                        subject.midterm1_active = True
+                        subject.midterm1_activated_at = timezone.now()
+                        subject.save()
+                elif action == 'deactivate':
+                    if not subject.midterm1_active:
+                        return JsonResponse({'error': 'Midterm 1 for all is already deactivated.'}, status=400)
+                    
+                    else:
+                        subject.midterm1_active = False
+                        subject.midterm1_deactivate = timezone.now()
+                        subject.save()
                 else:
                     return JsonResponse({'error': 'Invalid action.'}, status=400)
 
-            else:
-                return JsonResponse({'error': 'Invalid midterm value.'}, status=400)
+        elif mid_term == 2:
+            for subject in subjects:
+                if action == 'activate':
+                    if subject.midterm2_active:
+                        return JsonResponse({'error': 'Midterm 2 for all is already activated.'}, status=400)
+                    elif subject.midterm1_active:
+                        return JsonResponse({'error': 'Midterm 1 for all is active. Please deactivate Midterm 1 first.'}, status=400)
+                    elif subject.midterm2_deactivate:
+                        return JsonResponse({'error': 'Midterm 2 for all has been deactivated and cannot be activated again.'}, status=400)
+                    else:
+                        subject.midterm2_active = True
+                        subject.midterm2_activated_at = timezone.now()
+                        subject.save()
+                elif action == 'deactivate':
+                    if not subject.midterm2_active:
+                        return JsonResponse({'error': 'Midterm 2 for all is already deactivated.'}, status=400)
+                    else:
+                        subject.midterm2_active = False
+                        subject.midterm2_deactivate = timezone.now()
+                        subject.save()
+                else:
+                    return JsonResponse({'error': 'Invalid action.'}, status=400)
+        else:
+            return JsonResponse({'error': 'Invalid midterm value.'}, status=400)
 
-            return JsonResponse({'success': True, 'message': f'Midterm {mid_term} {"activated" if action == "activate" else "deactivated"} successfully for all subjects.'})
+        return JsonResponse({'success': True, 'message': f'Midterm {mid_term} {"activated" if action == "activate" else "deactivated"} successfully for all subjects.'})
 
-        except (Branches.DoesNotExist, Section.DoesNotExist):
-            return JsonResponse({'error': 'Invalid branch, year, or section.'}, status=400)
-    else:
-        return JsonResponse({'error': 'Invalid request method.'}, status=400)
+    except (Branches.DoesNotExist, Section.DoesNotExist):
+        return JsonResponse({'error': 'Invalid branch, year, or section.'}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @login_required(login_url='/adminlogin/')
 @csrf_exempt
@@ -1205,21 +1211,29 @@ def get_student_wise_analysis(request):
                         rating_count += 1
                     selected_options = getattr(feedback, f'options_mid_term_{mid_term}', None)
                     exam = feedback.subject.section.selected_exam.feedback_exam_code
+                    exam = Exam.objects.get(feedback_exam_code=exam)
                     if selected_options:
                         try:
                             selected_options = eval(selected_options) 
                         except (SyntaxError, NameError):
-                            return JsonResponse({'error': 'Invalid format for selected_options'}, status=400)
+                            return JsonResponse({'error': 'Invalid format for selected_options'}, status=400) 
                         for question_number, option_number in selected_options.items():
-                            question = Question.objects.get(exam=exam, question_number=int(question_number))
-                            option = QuestionOption.objects.get(question=question, option_number=int(option_number))
-                            student_data['question_ratings'].append({
-                                'question_number': question.question_number,
-                                'question_text': question.question_text,
-                                'selected_option': option.option_text,
-                                'rating': option.option_score
-                            })
-
+                            try:
+                                question_number = int(question_number)
+                                option_number = int(option_number)
+                                question = Question.objects.get(exam=exam, question_number=question_number)
+                                option = QuestionOption.objects.get(question=question, option_number=option_number)
+                                
+                                student_data['question_ratings'].append({
+                                    'question_number': question.question_number,
+                                    'question_text': question.question_text,
+                                    'selected_option': option.option_text,
+                                    'rating': option.option_score
+                                })
+                            except Question.DoesNotExist:
+                                print(f"Question matching exam: {exam}, question_number: {question_number} does not exist.")
+                            except QuestionOption.DoesNotExist:
+                                print(f"QuestionOption matching question: {question}, option_number: {option_number} does not exist.")
                     analysis_data.append(student_data)
                 if rating_count > 0:
                     total_average_rating /= rating_count
@@ -1250,15 +1264,18 @@ def get_question_wise_analysis(request):
             mid_term = int(data.get('mid_term'))
             if not all([branch_code, year_of_study, subject_code, section_code, mid_term]):
                 return JsonResponse({'error': 'Missing parameters'}, status=400)
-
             try:
-                exam = Feedback.objects.filter(
+                feedback_sample = Feedback.objects.filter(
                     subject__subject_code=subject_code,
                     subject__studying_year__studying_year=year_of_study,
                     subject__section__section_number=section_code,
                     subject__branch__branch_code=branch_code,
                     mid_term=mid_term
-                ).select_related('subject__section__selected_exam').first().subject.section.selected_exam.feedback_exam_code
+                ).select_related('subject__section__selected_exam').first()
+                if not feedback_sample:
+                    return JsonResponse({'error': 'No feedback found for the given criteria.'}, status=404)
+                exam = feedback_sample.subject.section.selected_exam.feedback_exam_code
+                exam=Exam.objects.get(feedback_exam_code=exam)
                 all_feedbacks = Feedback.objects.filter(
                     subject__subject_code=subject_code,
                     subject__studying_year__studying_year=year_of_study,
@@ -1282,23 +1299,25 @@ def get_question_wise_analysis(request):
                             if selected_options:
                                 try:
                                     selected_options = eval(selected_options)
-                                    if isinstance(selected_options, dict) and str(question.question_number) in selected_options and str(option.option_number) == selected_options[str(question.question_number)]:
+                                    if (isinstance(selected_options, dict) and 
+                                        str(question.question_number) in selected_options and 
+                                        str(option.option_number) == selected_options[str(question.question_number)]):
                                         option_count += 1
-                                except (SyntaxError, NameError):
+                                except (SyntaxError, NameError) as e:
+                                    print(f"Error processing selected options: {e}")
                                     pass 
 
                         question_data['options'][option.option_text] = option_count
-
                     analysis_data.append(question_data)
-
                 return JsonResponse({'analysis_data': analysis_data})
-
             except Exception as e:
+                print(f"Error: {e}")
                 return JsonResponse({'error': str(e)}, status=500)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
     else:
         return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
     
 @login_required(login_url='/adminlogin/')
 @csrf_exempt
@@ -1351,6 +1370,19 @@ def admin_logout_view(request):
 def downloadoverallreporthtml(request):
     return render(request,'downloadoverallreport.html')
 
+
+logger = logging.getLogger(__name__)
+
+def render_to_pdf(template_src, context_dict={}):
+    template = get_template(template_src)
+    html = template.render(context_dict)
+    logger.debug(f'Rendering PDF with HTML content: {html}')
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+    if not pdf.err:
+        return result.getvalue()
+    logger.error('Error rendering PDF: %s', pdf.err)
+    return None
 @login_required(login_url='/adminlogin/')
 @require_POST
 def downloadoverallreport(request):
@@ -1361,7 +1393,6 @@ def downloadoverallreport(request):
             branch_code = data.get('branch_code')
             section_number = data.get('section_number')
             selected_mid = data.get('selected_mid')
-
             if not all([year_number, branch_code, section_number, selected_mid]):
                 return JsonResponse({'success': False, 'error': 'Missing required fields.'})
 
@@ -1370,6 +1401,7 @@ def downloadoverallreport(request):
                 branch__branch_code=branch_code,
                 section_number=section_number
             )
+            branch=Branches.objects.get(branch_code=branch_code)
             department = Departments.objects.get(department_code=section.branch.department.department_code)
             department_name = department.department_name
             department_logo_url = department.department_logo.url if department.department_logo else None
@@ -1392,42 +1424,251 @@ def downloadoverallreport(request):
                         feedback_count += 1
 
                 average_rating = total_rating / feedback_count if feedback_count else 0
-                faculty_name = subject.faculty
-
+                faculty_id = subject.faculty
+                faculty_name=Faculty.objects.get(faculty_id=faculty_id)
                 feedback_data.append({
                     'subject_code': subject.subject_code,
                     'subject_name': subject.subject_name,
-                    'faculty_name': faculty_name,
+                    'faculty_name': faculty_name.faculty_name,
                     'average_rating': average_rating
                 })
+            if department.department_logo:
+                with open(department.department_logo.path, 'rb') as img_file:
+                    image_data = img_file.read()
+                    department_logo_url = f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
+            else:
+                department_logo_url = None 
 
+            with open('static/images/college_logo.png','rb') as img_file:
+                image_data=img_file.read()
+                college_logo_url=f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
+            with open('static/images/15217B18-D3CE-4794-BA0D-C3F24714219E_1_201_a.jpeg','rb') as img_file:
+                image_data=img_file.read()
+                developer_logo_url=f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
             context = {
                 'feedback_data': feedback_data,
                 'department_name': department_name,
                 'department_logo_url': department_logo_url,
+                'college_logo_url':college_logo_url,
+                'developer_logo_url':developer_logo_url,
                 'sem': sem,
                 'academic_year': academic_year,
+                'branch':branch.branch_name,
+                'section_name':section.section_name,
                 'selected_mid': selected_mid
             }
+            pdf_data = render_to_pdf('downloadoverallreport.html', context)
+            filename = f"{branch.branch_name}_{section.section_name}_{sem}_Midterm_{selected_mid}_overall_report.pdf"
+            if pdf_data:
+                response = HttpResponse(pdf_data, content_type='application/pdf')
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+            else:
+                return HttpResponse("Error Rendering PDF", status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
+        except Section.DoesNotExist:
+            return JsonResponse({'error': 'Section not found.'}, status=404)
+        except Exception as e:
+            logger.exception('Unexpected error occurred while generating the report.')
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return render(request, 'downloadoverallreport.html')
 
-            # Render the template to a string
-            html_string = render(request, 'downloadoverallreport.html', context).content.decode('utf-8')
-            
-            # Create a PDF from the rendered HTML
-            pdf = HTML(string=html_string).write_pdf()
+logger = logging.getLogger(__name__)
 
-            # Serve the PDF as a file download
-            response = HttpResponse(pdf, content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="overall_report.pdf"'
+
+@login_required(login_url='/adminlogin/')
+@csrf_exempt
+@require_POST
+def downloadsubjectwisereport(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            branch_code = data.get('branch_code')
+            year_of_study = data.get('year_of_study')
+            subject_code = data.get('subject_code')
+            section_code = data.get('section_number')
+            selected_mid = data.get('selected_mid')
+            section = Section.objects.get(
+                studying_year__studying_year=year_of_study,
+                branch__branch_code=branch_code,
+                section_number=section_code
+            )
+            sem = section.studying_year.studying_year_name
+            academic_year = section.studying_year.academic_year
+            department = Departments.objects.get(department_code=section.branch.department.department_code)
+            department_name = department.department_name
+            with open('static/images/college_logo.png','rb') as img_file:
+                image_data=img_file.read()
+                college_logo_url=f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
+            if not all([branch_code, year_of_study, subject_code, section_code, selected_mid]):
+                return JsonResponse({'error': 'Missing parameters'}, status=400)
+            question_analysis_data = get_question_wise_analysis_data(
+                branch_code, year_of_study, subject_code, section_code, selected_mid
+            )
+            if 'error' in question_analysis_data:
+                return JsonResponse(question_analysis_data, status=500)
+            comments_data = get_student_comments_data(
+                branch_code, year_of_study, subject_code, section_code, selected_mid
+            )
+            if 'error' in comments_data:
+                return JsonResponse(comments_data, status=500)
+
+            branch = Branches.objects.get(branch_code=branch_code)
+            section = Section.objects.get(
+                studying_year__studying_year=year_of_study,
+                branch__branch_code=branch_code,
+                section_number=section_code
+            )
+            total_subject_rating = 0
+            subject_rating_count = 0
+            for feedback in Feedback.objects.filter(
+                subject__subject_code=subject_code,
+                subject__studying_year__studying_year=year_of_study,
+                subject__section__section_number=section_code,
+                subject__branch__branch_code=branch_code,
+                mid_term=int(selected_mid)
+            ):
+                rating = getattr(feedback, f'mid_term_{selected_mid}_rating', None)
+                if rating is not None:
+                    total_subject_rating += rating
+                    subject_rating_count += 1
+            subject = Subject.objects.get(
+                subject_code=subject_code,
+                studying_year__studying_year=year_of_study,
+                section__section_number=section_code,
+                branch__branch_code=branch_code
+            )
+            faculty = Faculty.objects.get(faculty_id=subject.faculty)
+            if subject_rating_count > 0:
+                total_subject_rating /= subject_rating_count
+            context = {
+                'question_analysis_data': question_analysis_data,
+                'comments_data': comments_data,
+                'branch': branch.branch_name,
+                'section_name': section.section_name,
+                'selected_mid': selected_mid,
+                'college_logo_url':college_logo_url,
+                'department_name':department_name,
+                'total_subject_rating': total_subject_rating,
+                'subject_name': subject.subject_name,
+                'faculty_name': faculty.faculty_name ,
+                'sem':sem,
+                'academic_year':academic_year,
+            }
+            template_path = 'downloadsubjectwisereport.html'
+            template = get_template(template_path)
+            html = template.render(context)
+
+            response = HttpResponse(content_type='application/pdf')
+            filename = f'{branch.branch_name}_{section.section_name}_Midterm_{selected_mid}_{subject.subject_name}.pdf'
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+            pisa_status = pisa.CreatePDF(html, dest=response)
+            if pisa_status.err:
+                return HttpResponse('We had some errors <pre>' + html + '</pre>')
             return response
 
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
         except Section.DoesNotExist:
             return JsonResponse({'error': 'Section not found.'}, status=404)
+        except Exception as e:
+            logger.exception('Error generating subject analysis report.')
+            return JsonResponse({'error': str(e)}, status=500)
 
-    else:
-        return render(request, 'downloadoverallreport.html')
+
+def get_question_wise_analysis_data(branch_code, year_of_study, subject_code, section_code, mid_term):
+    try:
+        mid_term = int(mid_term)
+        feedback_sample = Feedback.objects.filter(
+            subject__subject_code=subject_code,
+            subject__studying_year__studying_year=year_of_study,
+            subject__section__section_number=section_code,
+            subject__branch__branch_code=branch_code,
+            mid_term=mid_term
+        ).select_related('subject__section__selected_exam').first()
+
+        if not feedback_sample:
+            return {'error': 'No feedback found for the given criteria.'}
+
+        exam = feedback_sample.subject.section.selected_exam.feedback_exam_code
+        exam = Exam.objects.get(feedback_exam_code=exam)
+        all_feedbacks = Feedback.objects.filter(
+            subject__subject_code=subject_code,
+            subject__studying_year__studying_year=year_of_study,
+            subject__section__section_number=section_code,
+            subject__branch__branch_code=branch_code,
+            mid_term=mid_term
+        ).select_related('student')
+        questions = Question.objects.filter(exam=exam).prefetch_related('options')
+        analysis_data = []
+        for question in questions:
+            question_data = {
+                'question_number': question.question_number,
+                'question_text': question.question_text,
+                'options': {},
+                'average_rating': 0 
+            }
+
+            total_rating = 0
+            rating_count = 0
+            for option in question.options.all():
+                option_count = 0
+                for feedback in all_feedbacks:
+                    selected_options = getattr(feedback, f'options_mid_term_{mid_term}', None)
+                    if selected_options:
+                        try:
+                            selected_options = eval(selected_options)
+                            if (isinstance(selected_options, dict) and
+                                str(question.question_number) in selected_options and
+                                str(option.option_number) == selected_options[str(question.question_number)]):
+                                option_count += 1
+                                total_rating += option.option_score  
+                                rating_count += 1
+                        except (SyntaxError, NameError) as e:
+                            print(f"Error processing selected options: {e}")
+                            pass
+
+                question_data['options'][option.option_text] = option_count
+            if rating_count > 0:
+                question_data['average_rating'] = total_rating / rating_count
+
+            analysis_data.append(question_data)
+        return analysis_data
+    except Exception as e:
+        print(f"Error in get_question_wise_analysis_data: {e}")
+        return {'error': str(e)}
+
+
+def get_student_comments_data(branch_code, year_of_study, subject_code, section_code, mid_term):
+    try:
+        mid_term = int(mid_term)
+        feedbacks = Feedback.objects.filter(
+            subject__subject_code=subject_code,
+            subject__studying_year__studying_year=year_of_study,
+            subject__section__section_number=section_code,
+            subject__branch__branch_code=branch_code,
+            mid_term=mid_term
+        ).select_related('student', 'subject', 'subject__section__selected_exam')
+
+        if not feedbacks:
+            return {'error': 'No feedback found for the given criteria.'}
+
+        analysis_data = []
+        for feedback in feedbacks:
+            comment = getattr(feedback, f'comments_mid_term_{mid_term}', None)
+            if comment:
+                student_data = {
+                    'comment': comment,
+                }
+                analysis_data.append(student_data)
+        return analysis_data
+    except Exception as e:
+        print(f"Error in get_student_comments_data: {e}")
+        return {'error': str(e)}
+
 
 
 #students

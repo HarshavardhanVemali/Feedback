@@ -75,8 +75,12 @@
 
 .options-display p {
     margin: 5px 0;
-    min-width: 100px;
+    min-width: 200px;
     font-weight: 400;
+}
+.question-graph{
+  width: 800px !important;
+  height: 250px !important;
 }
 .analysis-table td, .comments-table td {
     padding: 12px;

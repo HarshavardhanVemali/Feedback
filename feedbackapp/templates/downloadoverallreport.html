@@ -7,6 +7,35 @@
     <style>
         body {
             font-family: sans-serif; 
+            margin: 0;  
+            padding: 0; 
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; 
+        }
+        #report-header {
+            background: linear-gradient(45deg, #F5F5F5, #FFD700, #FFA07A);
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            border: 1px solid black;
+        }
+
+        #college_logo img, #department_logo img {
+            max-height: 80px;
+            margin-right: 20px; 
+        }
+
+        #college_sub_title {
+            text-align: center;
+        }
+
+        #department-info {
+            text-align: center; 
+            margin-bottom: 20px;
         }
 
         table {
@@ -22,70 +51,132 @@
         }
 
         th {
-            background-color: #f2f2f2;
+            background-color: #d63848;
+        }
+
+        footer {
+            text-align: center;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0;
+            margin-top: 50px;
+        }
+        footer a {
+            color: darkblue;
+        }
+
+        footer img {
+            height: 30px;
+            width: 30px;
+            border-radius: 50%;
+            margin-bottom: 5px;
         }
 
         @media print {
             body {
-                margin: 1cm; /* Set page margins */
+                margin: 1cm;
+            }
+
+            #department_logo img {
+                max-height: 80px;
+                margin-right: 20px; 
+            }
+
+            #report-header {
+                border: 1px solid black;
+                padding: 5px;
+                background: linear-gradient(45deg, #F5F5F5, #FFD700, #FFA07A) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                display: flex;
+                align-items: center;
             }
 
             table {
-                page-break-after: always; /* Force a page break after the table */
+                page-break-after: auto; 
+                page-break-inside: avoid;
             }
 
-            /* Add more print-specific styles as needed */
+            #college_logo img {
+                max-height: 80px;
+                margin-right: 20px; 
+            }
+
+            footer img {
+                width: 20mm; 
+                height: auto;  
+            }
+
+            #college_sub_title, #department-info {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            footer {
+                position: static; 
+                bottom: 0;
+                page-break-after: avoid; 
+            }
+
+            #report-container {
+                page-break-inside: avoid; 
+            }
+        }
+
+        @page {
+            size: A4;
+            margin: 1.5cm;
         }
     </style>
 </head>
-</head>
 <body>
     <div id="report-container">
-        {% if department_logo_url %} 
-            <div style="text-align: center; margin-bottom: 20px;">
-                <img src="{{ department_logo_url }}" alt="Department Logo" style="max-width: 100px; height: auto;">
-                <h2>{{ department_name }}</h2>
-                <h3>Overall Feedback Report - {{ sem }} ({{ academic_year }})</h3>
-                <h4>Mid - {{ selected_mid }}</h4>
+        <div id="report-header">
+            <div id="college_sub_title">
+                <a href="https://www.mvgrce.com/" target="_blank">
+                    <img src="{{ college_logo_url }}" alt="college_logo" style="width: 60px;height: 60px;">
+                </a>
+                <h1 style="font-size: 18px !important; color: #d63848;">Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+                <h2 style="font-size: 16px !important;">Department of {{ department_name }}</h2>
             </div>
-            <div id="report-content">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Subject Code</th>
-                            <th>Subject Name</th>
-                            <th>Faculty Name</th>
-                            <th>Average Rating</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in feedback_data %}
-                            <tr>
-                                <td>{{ item.subject_code }}</td>
-                                <td>{{ item.subject_name }}</td>
-                                <td>{{ item.faculty_name }}</td>
-                                <td>{{ item.average_rating }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endif %} 
-    </div>
+        </div>
 
-    <script>
-        window.onload = function() {
-            // Check if data is available for printing
-            var reportContent = document.getElementById('report-content');
-            if (reportContent) {
-                // Set page orientation to landscape
-                var style = document.createElement('style');
-                style.innerHTML = '@page { size: landscape; }';
-                document.head.appendChild(style);
-        
-                window.print(); 
-            }
-        };
-    </script>
+        <div id="department-info">
+            <h3>Overall Feedback Report - {{ sem }} ({{ academic_year }})</h3>
+            <h4>Mid - {{ selected_mid }}</h4>
+            <p>Branch: {{ branch }}</p>
+            <p>Section: {{ section_name }}</p>
+            
+        </div>
+
+        <div id="report-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Faculty Name</th>
+                        <th>Average Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in feedback_data %}
+                        <tr>
+                            <td>{{ item.subject_code }}</td>
+                            <td>{{ item.subject_name }}</td>
+                            <td>{{ item.faculty_name }}</td>
+                            <td>{{ item.average_rating }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <footer>
+            <h4>© 2024. All rights reserved to <a href="https://harshavardhanvemali.netlify.app/" target="_blank">V.Harsha Vardhan</a> (Department Of Data Engineering).</h4>
+        </footer>
+    </div>
 </body>
 </html>

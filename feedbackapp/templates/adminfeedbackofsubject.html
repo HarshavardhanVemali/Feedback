@@ -157,6 +157,9 @@
         } else if (analysisId.startsWith('comments')) {
             getstudentcomments(midtermNumber);
         } 
+        else if (analysisId.startsWith('download')) {
+            downloadreport(midtermNumber);
+        }
         document.getElementById(analysisId).style.display = 'block';
         event.target.classList.add('active'); 
     }
@@ -408,7 +411,53 @@
 
         commentsDiv.appendChild(table);
     }
+    function downloadreport(midterm){
 
+        const selected_mid = midterm;
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const branchCode = urlParams.get('branch_code');
+        const yearNumber = urlParams.get('year_of_study');
+        const sectionNumber = urlParams.get('section_number');
+
+        fetch('/downloadsubjectwisereport/', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                'branch_code': branchCode,
+                'year_of_study': yearNumber,
+                'subject_code': subjectCode, 
+                'section_number': sectionNumber,
+                'selected_mid': selected_mid 
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const contentDisposition = response.headers.get('Content-Disposition');
+                const filename = contentDisposition.split('filename=')[1].replace(/['"]/g, ''); 
+                return response.blob().then(blob => ({ blob, filename }));
+        })
+        .then(({ blob, filename }) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download=filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a); 
+        })
+        .catch(error => {
+            console.error('Error downloading report:', error);
+            alert('An error occurred while downloading the report.');
+        });
+    }
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

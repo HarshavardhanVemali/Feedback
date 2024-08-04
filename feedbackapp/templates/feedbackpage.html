@@ -42,8 +42,8 @@
         background-color: white;
         border-radius: 50%;
         opacity: 0;
-        animation: twinkle 3s infinite alternate; /* More natural twinkle */
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Glow effect */
+        animation: twinkle 3s infinite alternate; 
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); 
     }
 
     /* Different star sizes */
@@ -60,7 +60,7 @@
     @keyframes twinkle {
         0% { 
             opacity: 0; 
-            transform: scale(0.8); /* Add scaling for a subtle pulse */
+            transform: scale(0.8); 
         }
         100% { 
             opacity: 1; 
@@ -196,10 +196,11 @@
 
                         const optionsDiv = document.createElement('div');
                         optionsDiv.classList.add('options');
-                        question.options.forEach(option => {
+                        question.options.forEach((option, optionIndex) => {
                             const optionItem = document.createElement('div');
+                            const isChecked = optionIndex === 0 ? 'checked' : ''; 
                             optionItem.innerHTML = `
-                                <input type="radio" name="question${question.question_number}" value="${option.option_number}">
+                                <input type="radio" name="question${question.question_number}" value="${option.option_number}" ${isChecked}> 
                                 <label>${option.option_text}</label>
                             `;
                             optionsDiv.appendChild(optionItem);

@@ -881,7 +881,7 @@
             .catch(error => console.error('Error:',error))
         }
         document.getElementById('downloadoverallreportform').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
+            event.preventDefault();
 
             const selected_mid = document.getElementById('selectmid').value;
             const queryString = window.location.search;
@@ -907,19 +907,20 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                return response.blob(); // Get the response as a Blob
+                const contentDisposition = response.headers.get('Content-Disposition');
+                const filename = contentDisposition.split('filename=')[1].replace(/['"]/g, ''); 
+                return response.blob().then(blob => ({ blob, filename }));
             })
-            .then(blob => {
-                // Create a download link and trigger the download
+            .then(({ blob, filename }) => { 
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = 'overall_feedback_report.csv'; 
+                a.download = filename; 
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
-                document.body.removeChild(a); 
+                document.body.removeChild(a);
             })
             .catch(error => {
                 console.error('Error downloading report:', error);

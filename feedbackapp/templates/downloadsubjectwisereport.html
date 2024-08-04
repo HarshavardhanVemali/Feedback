@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Subject Analysis Report</title>
+    <style> 
+        body {
+            font-family: sans-serif; 
+            margin: 0;  
+            padding: 0; 
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; 
+        }
+        #report-header {
+            background: linear-gradient(45deg, #F5F5F5, #FFD700, #FFA07A);
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center; 
+            border: 1px solid black;
+        }
+
+        h1, h2 ,img{
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 3px;
+        }
+        .options-table {
+            width: auto;  
+            margin-top: 10px; 
+            border-collapse: collapse; 
+        }
+
+        .options-table td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 5px; 
+        }
+        th {
+            background-color: #e6ffe6;
+        }
+
+        .question-analysis {
+            margin-bottom: 20px;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-content img {
+            margin-bottom: 10px;
+        }
+        footer {
+            text-align: center;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0;
+            margin-top: 50px;
+        }
+        footer a {
+            color: darkblue;
+        }
+    </style>
+</head>
+<body>
+    <div id="report-header">
+        <div class="header-content">
+            <img src="{{ college_logo_url }}" alt="college_logo" style="width: 70px;height: 70px;">
+            <h1 style="font-size: 18px !important; color: #d63848;">Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+            <h2 style="font-size: 16px !important;">Department of {{ department_name }}</h2>
+        </div>
+    </div>
+    <h2>Semester: {{ sem }}, Academic Year: {{ academic_year }}</h2>
+    <h2>Branch: {{ branch }} - Section: {{ section_name }}</h2>
+    <h2>Mid - {{ selected_mid }} Subject Feedback Report</h2>
+    <h3 style="color: #d63848;margin-top: 10px;font-size: 16px;">Subject Details:</h3>
+    <h3>Subject Name: {{subject_name}}</h3>
+    <h3>Faculty Name : {{faculty_name}}</h3>
+    <h3>Subject Overall Rating: {{ total_subject_rating|floatformat:2 }}</h3>
+    <h3 style="color:#d63848;font-size: 18px; ">Question-wise Analysis</h3>
+    {% for question in question_analysis_data %}
+        <div class="question-analysis">
+            <h3 style="color: #0066cc;">Question {{ question.question_number }}: {{ question.question_text }}</h3>
+            <p><strong style="color: #f5573b;">Average Rating:</strong> <b>{{ question.average_rating|floatformat:2 }}</b></p> <div class="options-display">
+                <table class="options-table">
+                    <thead>
+                        <tr>
+                            <th>Option</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for option, count in question.options.items %}
+                            <tr>
+                                <td>{{ option }}</td>
+                                <td>{{ count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endfor %}
+
+    <h3 style="color:#d63848;font-size: 18px">Student Comments</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Comment</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comment in comments_data %}
+                <tr>
+                    <td>{{ comment.comment|default_if_none:"" }}</td> 
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+<footer>
+    <h4>© 2024. All rights reserved to <a href="https://harshavardhanvemali.netlify.app/" target="_blank">V.Harsha Vardhan</a> (Department Of Data Engineering).</h4>
+</footer>
+
+</html>
