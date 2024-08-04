@@ -967,11 +967,8 @@ def getsubject(request):
             return JsonResponse({'error': 'Section not found.'}, status=404)
         except Subject.DoesNotExist:
             return JsonResponse({'error': 'Subject not found.'}, status=404)
-<<<<<<< HEAD
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-=======
->>>>>>> aa41f063fb920700cb024b0b9f1023af7368fa4d
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 
