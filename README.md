@@ -81,6 +81,8 @@ Feedback Portal can transform the way colleges collect, manage, and leverage fee
 2. **Network Access:**
    - To allow access from other devices on your network: `python manage.py runserver 0.0.0.0:8000` 
    - Replace `0.0.0.0` with your system's IP address if necessary.
+3. **Software Firewall:**
+   - sudo ufw allow 8000/tcp
 
 ## Contributing
 
