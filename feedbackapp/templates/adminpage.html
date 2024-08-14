@@ -23,7 +23,7 @@
     </div>
     <div class="navbar-in-admin">
         <ul>
-            <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
+            <li><a class="nav-link active" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
             <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
             <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
             <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
@@ -125,8 +125,8 @@ function getdepartments() {
         data.forEach(department => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td contenteditable="true" style="overflow-x:scroll;max-width:150px;" id="department_name_${department.code}">${department.name}</td>
-                <td id="department_code_${department.code}" style="overflow-x:scroll;">${department.code}</td>
+                <td contenteditable="true" style="max-width:150px;" id="department_name_${department.code}">${department.name}</td>
+                <td id="department_code_${department.code}">${department.code}</td>
                 <td>${department.logo ? `<img src="${department.logo}" alt="${department.name} Logo" height="50">` : 'N/A'}</td>
                 <td><button onclick="saveChanges('${department.code}')" class="save-button">
                     

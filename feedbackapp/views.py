@@ -8,7 +8,7 @@ import json
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError 
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password,check_password
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
@@ -22,6 +22,28 @@ from django.template.loader import get_template
 import logging
 from xhtml2pdf import pisa
 import base64
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.models import Permission
+from django.contrib.auth.decorators import user_passes_test
+def admin_required(view_func):
+    return user_passes_test(
+        lambda u: u.is_superuser or u.has_perm('feedbackapp.is_admin'), 
+        login_url='/adminlogin/' 
+    )(view_func)
+
+def student_required(view_func):
+    return user_passes_test(
+        lambda u: (u.is_active or  u.has_perm('feedbackapp.is_student')) and not(u.is_superuser) and not(u.has_perm('feedbackapp.is_faculty')),
+        login_url='/studentlogin/' 
+    )(view_func)
+
+def faculty_required(view_func):
+    return user_passes_test(
+        lambda u: (u.is_active or u.has_perm('feedbackapp.is_faculty')) and not(u.is_superuser) and not(u.has_perm('feedbackapp.is_student')), 
+        login_url='/facultylogin/'
+    )(view_func)
+
+
 
 MAX_FAILED_ATTEMPTS = 3
 def set_device_cookie(response, device_id):
@@ -77,11 +99,11 @@ def adminlogin(request):
             set_device_cookie(response, device_id)
         return response
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 def adminpage(request):
     return render(request,'adminpage.html')
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 def adddepartments(request):
     if request.method == 'POST':
         if request.POST.get('form_type') == 'adddepartmentsform':
@@ -104,7 +126,7 @@ def adddepartments(request):
             except Exception as e:
                 return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method or form type.'})
-@login_required(login_url='/adminlogin/')
+@admin_required
 def get_departments(request):
     if request.method == 'POST':
         departments = Departments.objects.all()
@@ -117,7 +139,7 @@ def get_departments(request):
             })
         return JsonResponse(department_data, safe=False)
     return JsonResponse({'success': False, 'error': 'Invalid request method or form type.'})
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 def savedepartmentchanges(request):
     try:
@@ -133,7 +155,7 @@ def savedepartmentchanges(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 def deletedepartment(request):
     try:
@@ -147,11 +169,11 @@ def deletedepartment(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 def adminfaculty(request):
     return render(request,'adminfaculty.html')
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 def get_faculty(request):
     if request.method == 'POST':
@@ -181,7 +203,7 @@ def get_faculty(request):
             return JsonResponse({'error': 'No faculty found for this department.'}, status=404)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 def addfaculty(request):
     if request.method=='POST':
@@ -208,6 +230,8 @@ def addfaculty(request):
                     password=hashed_password,
                     role='faculty'
                 )
+                faculty_permission = Permission.objects.get(codename='is_faculty')
+                faculty.user_permissions.add(faculty_permission) 
                 if faculty:
                     return JsonResponse({'success': True})
                 else:
@@ -216,7 +240,7 @@ def addfaculty(request):
                 return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method or form type.'})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 def savefacultychanges(request):
     try:
@@ -231,7 +255,7 @@ def savefacultychanges(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 def deletefaculty(request):
     try:
@@ -246,7 +270,7 @@ def deletefaculty(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/amdinlogin/')
+@admin_required
 def adminbranches(request):
     year_number = request.GET.get('year')
 
@@ -255,11 +279,11 @@ def adminbranches(request):
      }
     return render(request, 'adminbranches.html', context)
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 def adminstudents(request):
     return render(request,'adminstudents.html')
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 def addyear(request):
     if request.method=='POST':
@@ -284,7 +308,7 @@ def addyear(request):
                 return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method or form type.'})
 
-login_required(login_url='/adminlogin/')
+@admin_required
 def getyears(request):
     if request.method == 'POST':
         years = StudyingYear.objects.all()
@@ -298,7 +322,7 @@ def getyears(request):
         return JsonResponse(year_data, safe=False)
     return JsonResponse({'success': False, 'error': 'Invalid request method or form type.'})
 
-login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 def saveyearchanges(request):
     try:
@@ -319,7 +343,7 @@ def saveyearchanges(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 def deleteyear(request):
     try:
@@ -334,7 +358,7 @@ def deleteyear(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 def addbranches(request):
     if request.method == 'POST':
@@ -364,7 +388,7 @@ def addbranches(request):
                 return JsonResponse({'success': False, 'error': str(e)}, status=500)
     return JsonResponse({'success': False, 'error': 'Invalid request method or form type.'})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 def get_branches(request):
     if request.method == 'POST':
@@ -390,7 +414,7 @@ def get_branches(request):
             return JsonResponse({'success': False, 'error': 'Year number and department code are required.'})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method.'})
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 def savebranchchanges(request):
     try:
@@ -408,7 +432,7 @@ def savebranchchanges(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 def deletebranch(request):
     try:
@@ -423,11 +447,11 @@ def deletebranch(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 def adminsections(request):
     return render(request, 'adminsections.html')
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 @csrf_exempt
 def addsections(request):
@@ -460,7 +484,7 @@ def addsections(request):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request.'})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 def get_sections(request):
     try:
@@ -488,7 +512,7 @@ def get_sections(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 @csrf_exempt
 def savesectionchanges(request):
@@ -517,7 +541,7 @@ def savesectionchanges(request):
     except Section.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'No section found.'}, status=404)
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def deletesection(request):
@@ -540,11 +564,11 @@ def deletesection(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 def adminaddstudents(request):
     return render(request,'adminaddstudents.html')
 
-@login_required(login_url='/adminlogin/') 
+@admin_required
 @csrf_exempt
 @require_POST
 def getstudents(request):
@@ -570,7 +594,7 @@ def getstudents(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/adminlogin/') 
+@admin_required
 @csrf_exempt
 @require_POST
 def addsingleuser(request):
@@ -605,12 +629,14 @@ def addsingleuser(request):
                     role='student',
                     password=hashed_password
                 )
+                student_permission = Permission.objects.get(codename='is_student')
+                student.user_permissions.add(student_permission)
                 return JsonResponse({'success': True})
             except (Branches.DoesNotExist, Section.DoesNotExist) as e:
                 return JsonResponse({'success': False, 'error': str(e)}, status=404)
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def addmultipleusers(request):
@@ -652,11 +678,13 @@ def addmultipleusers(request):
                         role='student',
                         password=hashed_password
                     )
+                    student_permission = Permission.objects.get(codename='is_student')
+                    student.user_permissions.add(student_permission)    
                 return JsonResponse({'success': True})
             except (Branches.DoesNotExist, Section.DoesNotExist) as e:
                 return JsonResponse({'success': False, 'error': str(e)}, status=404)
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def savestudentchanges(request):
@@ -680,7 +708,7 @@ def savestudentchanges(request):
     except Section.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'No Student found.'}, status=404)
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def deletestudent(request):
@@ -696,12 +724,33 @@ def deletestudent(request):
         return JsonResponse({'success': False, 'error': 'Student not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
-    
-@login_required(login_url='/adminlogin/')
+
+@admin_required
+@require_POST
+@csrf_protect
+def resetpassword(request):
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('student_id')
+        if not student_id:
+            return JsonResponse({'success': False, 'message': 'Student ID is required.'})
+
+        student = Student.objects.filter(student_id=student_id).first()
+        if student:
+            student.password = make_password(student_id)
+            student.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'message': 'Student not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+            
+
+@admin_required
 def adminfeedback(request):
     return render(request,'adminfeedback.html')
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def getactivefeedbackexams(request):
@@ -714,7 +763,7 @@ def getactivefeedbackexams(request):
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def getmaximumoptions(request):
@@ -731,7 +780,7 @@ def getmaximumoptions(request):
 
 
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def addfeedbackexam(request):
@@ -754,7 +803,7 @@ def addfeedbackexam(request):
         return JsonResponse({'success': False, 'error': 'Invalid form type.'})
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def updateExam(request):
@@ -775,7 +824,7 @@ def updateExam(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def deleteExam(request):
@@ -794,13 +843,13 @@ def deleteExam(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def adminaddquestions(request):
     return render(request,'adminaddquestions.html')
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def getquestions(request):
@@ -839,7 +888,7 @@ def getquestions(request):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
-@login_required
+@admin_required
 @csrf_exempt
 @require_POST
 def addquestion(request):
@@ -877,7 +926,7 @@ def addquestion(request):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-@login_required
+@admin_required
 @csrf_exempt
 @require_POST
 def savequestions(request):
@@ -912,7 +961,7 @@ def savequestions(request):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-@login_required
+@admin_required
 @csrf_exempt
 @require_POST
 def deletequestion(request):
@@ -935,7 +984,7 @@ def deletequestion(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
-@login_required(login_url='/adminlogin')
+@admin_required
 @csrf_exempt
 @require_POST
 def getsubject(request):
@@ -972,7 +1021,7 @@ def getsubject(request):
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def addsubject(request):
@@ -1014,7 +1063,7 @@ def addsubject(request):
                     return JsonResponse({'error': 'Invalid branch, year, section, or faculty.'}, status=400)
 
 
-@login_required(login_url='/adminlogin')
+@admin_required
 @csrf_exempt
 @require_POST
 def savesubjectchanges(request):
@@ -1038,7 +1087,7 @@ def savesubjectchanges(request):
         except Subject.DoesNotExist:
             return JsonResponse({'error': 'Invalid subject code, branch, year, or section.'}, status=400)
 
-@login_required(login_url='/adminlogin')
+@admin_required
 @csrf_exempt
 @require_POST
 def deletesubject(request):
@@ -1059,7 +1108,7 @@ def deletesubject(request):
             return JsonResponse({'success': True})
         except Subject.DoesNotExist:
             return JsonResponse({'error': 'Invalid subject code, branch, year, or section.'}, status=400)
-@login_required(login_url='/adminlogin')
+@admin_required
 @csrf_exempt
 @require_POST
 def activatefeedback(request):
@@ -1138,7 +1187,7 @@ def activatefeedback(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def changequestionsforthesection(request):
@@ -1167,11 +1216,11 @@ def changequestionsforthesection(request):
     else:
         return JsonResponse({'error': 'Invalid request method.'}, status=400)   
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 def adminfeedbackofsubject(request):
     return render(request,'adminfeedbackofsubject.html')
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def get_student_wise_analysis(request):
@@ -1250,7 +1299,7 @@ def get_student_wise_analysis(request):
     else:
         return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def get_question_wise_analysis(request):
@@ -1319,7 +1368,7 @@ def get_question_wise_analysis(request):
         return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
     
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def get_student_comments(request):
@@ -1361,12 +1410,12 @@ def get_student_comments(request):
     else:
         return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
-@login_required(login_url="/adminlogin/")
+@admin_required
 def admin_logout_view(request):
     logout(request)
     return redirect('adminlogin')
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 def downloadoverallreporthtml(request):
     return render(request,'downloadoverallreport.html')
 
@@ -1383,7 +1432,7 @@ def render_to_pdf(template_src, context_dict={}):
         return result.getvalue()
     logger.error('Error rendering PDF: %s', pdf.err)
     return None
-@login_required(login_url='/adminlogin/')
+@admin_required
 @require_POST
 def downloadoverallreport(request):
     if request.method == 'POST':
@@ -1478,7 +1527,7 @@ def downloadoverallreport(request):
 logger = logging.getLogger(__name__)
 
 
-@login_required(login_url='/adminlogin/')
+@admin_required
 @csrf_exempt
 @require_POST
 def downloadsubjectwisereport(request):
@@ -1673,7 +1722,7 @@ def get_student_comments_data(branch_code, year_of_study, subject_code, section_
 
 #students
 
-@login_required(login_url='/studentlogin/')
+@student_required 
 def index(request):
     student_name = request.session.get('student_name')
     register_number = request.session.get('register_number') 
@@ -1706,7 +1755,7 @@ def studentlogin(request):
 
     return render(request, 'studentlogin.html')
 
-@login_required(login_url='/studentlogin/')
+@student_required 
 @csrf_exempt
 @require_POST
 def getstudentsforexam(request):
@@ -1733,7 +1782,7 @@ def getstudentsforexam(request):
     else:
         return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
-@login_required(login_url='/studentlogin/')
+@student_required 
 @csrf_exempt
 @require_POST
 def getdepartmentdeatils(request):
@@ -1758,11 +1807,11 @@ def getdepartmentdeatils(request):
     else:
         return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
-@login_required(login_url='/studentlogin/')
+@student_required 
 def feedbackpage(request):
     return render(request,'feedbackpage.html')
 
-@login_required(login_url='/studentlogin/')
+@student_required 
 @csrf_exempt
 @require_POST
 def getsubjectsatstudent(request):
@@ -1812,7 +1861,7 @@ def getsubjectsatstudent(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required(login_url='/studentlogin/')
+@student_required 
 def getsubjectdetails(request):
     if request.method == 'POST':
         try:
@@ -1835,7 +1884,33 @@ def getsubjectdetails(request):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
-@login_required(login_url='/studentlogin/')
+@student_required 
+@csrf_protect
+@require_POST
+def changepassword(request):
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('student_id')
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+
+        if not (student_id and current_password and new_password):
+            return JsonResponse({'success': False, 'message': 'Required missing fields.'})
+
+        student = Student.objects.filter(student_id=student_id).first()
+        if student:
+            if check_password(current_password, student.password):
+                student.password = make_password(new_password)
+                student.save()
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid Current Password.'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Student not present.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@student_required 
 @csrf_exempt
 @require_POST
 def getquestionsforfeedback(request):
@@ -1875,7 +1950,7 @@ def getquestionsforfeedback(request):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method.'})
     
-@login_required(login_url='/studentlogin/')
+@student_required 
 def submitfeedback(request):
     if request.method == 'POST':
         try:
@@ -1946,14 +2021,14 @@ def submitfeedback(request):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
-@login_required(login_url="/studentlogin/")
+@student_required 
 def student_logout_view(request):
     logout(request)
     return redirect('studentlogin')
  
 #faculty
 
-@login_required(login_url='/facultylogin/')
+@faculty_required
 @csrf_exempt
 def facultypage(request):
     faculty_name = request.session.get('faculty_name')
@@ -1988,11 +2063,11 @@ def facultylogin(request):
 
     return render(request, 'facultylogin.html')
 
-@login_required(login_url='/facultylogin/')
+@faculty_required
 def facultyfeedbackofsubject(request):
     return render(request,'facultyfeedbackofsubject.html')
 
-@login_required(login_url='/facultylogin/')
+@faculty_required
 @csrf_exempt
 @require_POST
 def get_overall_rating(request):
@@ -2035,7 +2110,7 @@ def get_overall_rating(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
 
-@login_required(login_url='/facultylogin/')
+@faculty_required
 @csrf_exempt
 def get_subjects_of_faculty(request):
     if request.method == 'GET':
@@ -2059,8 +2134,7 @@ def get_subjects_of_faculty(request):
         return JsonResponse({'subjects': subjects_data})
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-@login_required(login_url="/facultylogin/")
+@faculty_required
 def faculty_logout_view(request):
     logout(request)
     return redirect('facultylogin')
-

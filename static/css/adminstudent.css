@@ -235,6 +235,9 @@ width:400px;
     margin-top: 20px;
     border: 1px solid #ddd;
 }
+#studentstable{
+    width: 100%;
+}
 #edittable,#studentstable,#editfeedback,#subjectstable {
     border-radius: 10px;
 }

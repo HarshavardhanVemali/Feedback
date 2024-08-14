@@ -25,7 +25,7 @@
     <div class="navbar-in-admin">
         <ul>
             <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
-            <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+            <li><a class="nav-link active" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
             <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
             <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
         </ul>
@@ -74,7 +74,7 @@
                     </div>
                     <div id="form-row">
                         <label for="registernumber">ID Number</label>
-                        <input type="text" name="registernumber" id="registernumber" placeholder="Register Number" required>
+                        <input type="text" name="registernumber" id="registernumber" placeholder="ID Number" required>
                     </div>
                     <div id="form-row">
                         <label for="department">Department</label>
@@ -167,8 +167,8 @@
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${faculty.facultyid}</td>
-                        <td contenteditable="true" id="faculty_name_${faculty.facultyid}" style="overflow-x:scroll;max-width:150px;">${faculty.name}</td>
-                        <td>${faculty.departmentname} (${faculty.departmentcode})</td>
+                        <td contenteditable="true" id="faculty_name_${faculty.facultyid}" style="max-width:150px;">${faculty.name}</td>
+                        <td>${faculty.departmentname}</td>
                         <td>${faculty.img ? `<img src="${faculty.img}" alt="${faculty.name}">` : 'Image N/A'}</td>
                         <td><button class="save-button" onclick="savefacultyChanges('${faculty.facultyid}')">Save</button></td> 
                         <td><button class="delete-button" onclick="deleteDepartment('${faculty.facultyid}')">

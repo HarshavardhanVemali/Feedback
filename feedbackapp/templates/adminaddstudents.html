@@ -30,7 +30,7 @@
             <ul>
                 <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
                 <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
-                <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
+                <li><a class="nav-link active" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
                 <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
             </ul>
         </div>
@@ -168,6 +168,7 @@
                             <th>Section</th>
                             <th></th>
                             <th></th>
+                            <th></th>
                         </thead>
                         <tbody>
     
@@ -259,8 +260,9 @@
                             <th>Subject Name</th>
                             <th>Faculty Department</th>
                             <th>Faculty</th>
-                            <th>Save</th>
-                            <th>Delete</th>
+                            <th></th>
+                            <th></th>
+
                         </thead>
                         <tbody>
     
@@ -478,12 +480,18 @@
                                     Delete
                                 </button>
                             </td>
+                            <td><button onclick="resetpassword('${student.student_id}')" class="save-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"/>
+                                <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466"/>
+                                </svg>
+                                Reset</button></td>
                         `;
                         studentTableBody.appendChild(row);
                     });
                 } else {
                     const row = document.createElement('tr');
-                    row.innerHTML = '<td colspan="8">No students found.</td>';
+                    row.innerHTML = '<td colspan="9">No students found.</td>';
                     studentTableBody.appendChild(row);
                 }
             })
@@ -491,6 +499,29 @@
                 console.error('Error fetching students:', error);
             });
         }
+        function resetpassword(studentId){
+            fetch('/resetpassword/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    'student_id': studentId
+                })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Password reset successful.');
+                } else {
+                    alert('Failed to reset password: ', data.message);
+                }
+            })
+            .catch(error => {
+                console.log('Error in changing password: ', error);
+            });
+        }
+
         function getactivefeedbackexams() {
             fetch('/getactivefeedbackexams/', {
                 method: 'POST',

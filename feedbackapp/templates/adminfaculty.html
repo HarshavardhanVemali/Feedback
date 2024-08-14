@@ -25,7 +25,7 @@
     <div class="navbar-in-admin">
         <ul>
             <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
-            <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+            <li><a class="nav-link active" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
             <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
             <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
         </ul>
@@ -68,7 +68,7 @@
                     </div>
                     <div id="form-row">
                         <label for="registernumber">ID Number</label>
-                        <input type="text" name="registernumber" id="registernumber" placeholder="Register Number" required>
+                        <input type="text" name="registernumber" id="registernumber" placeholder="ID Number" required>
                     </div>
                     <div id="form-row">
                         <label for="department">Department</label>
@@ -156,7 +156,6 @@
                 alert('Faculty added successfully.');
                 form.reset();
                 document.querySelector('.overlay').classList.remove('active');
-                getdepartments();
             } else {
                 alert('Failed to add Faculty: ' + data.error);
             }
