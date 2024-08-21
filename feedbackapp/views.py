@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth import authenticate, login
-from .models import FailedLoginAttempts,Faculty,Branches,Departments,Section,StudyingYear,Student,Exam,Question,QuestionOption,Subject,User,Feedback
+from .models import FailedLoginAttempts,Faculty,Branches,Departments,Section,StudyingYear,Student,Exam,Question,QuestionOption,Subject,User,Feedback,Hod
 import uuid
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -25,6 +25,8 @@ import base64
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.models import Permission
 from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.models import Permission, ContentType
+
 def admin_required(view_func):
     return user_passes_test(
         lambda u: u.is_superuser or u.has_perm('feedbackapp.is_admin'), 
@@ -43,7 +45,11 @@ def faculty_required(view_func):
         login_url='/facultylogin/'
     )(view_func)
 
-
+def hod_required(view_func):
+    return user_passes_test(
+        lambda u: (u.is_active or u.has_perm('feedbackapp.is_faculty')) and not(u.is_superuser) and not(u.has_perm('feedbackapp.is_student')), 
+        login_url='/hodlogin/'
+    )(view_func)
 
 MAX_FAILED_ATTEMPTS = 3
 def set_device_cookie(response, device_id):
@@ -230,8 +236,12 @@ def addfaculty(request):
                     password=hashed_password,
                     role='faculty'
                 )
-                faculty_permission = Permission.objects.get(codename='is_faculty')
-                faculty.user_permissions.add(faculty_permission) 
+                faculty_permission, created = Permission.objects.get_or_create(
+                        codename='is_faculty',
+                        name='Can access student-specific features',
+                        content_type=ContentType.objects.get_for_model(Faculty)
+                    )
+                faculty.user_permissions.add(faculty_permission)   
                 if faculty:
                     return JsonResponse({'success': True})
                 else:
@@ -629,8 +639,12 @@ def addsingleuser(request):
                     role='student',
                     password=hashed_password
                 )
-                student_permission = Permission.objects.get(codename='is_student')
-                student.user_permissions.add(student_permission)
+                student_permission, created = Permission.objects.get_or_create(
+                    codename='is_student',
+                    name='Can access student-specific features',
+                    content_type=ContentType.objects.get_for_model(Student)
+                )
+                student.user_permissions.add(student_permission) 
                 return JsonResponse({'success': True})
             except (Branches.DoesNotExist, Section.DoesNotExist) as e:
                 return JsonResponse({'success': False, 'error': str(e)}, status=404)
@@ -678,7 +692,11 @@ def addmultipleusers(request):
                         role='student',
                         password=hashed_password
                     )
-                    student_permission = Permission.objects.get(codename='is_student')
+                    student_permission, created = Permission.objects.get_or_create(
+                        codename='is_student',
+                        name='Can access student-specific features',
+                        content_type=ContentType.objects.get_for_model(Student)
+                    )
                     student.user_permissions.add(student_permission)    
                 return JsonResponse({'success': True})
             except (Branches.DoesNotExist, Section.DoesNotExist) as e:
@@ -1019,7 +1037,6 @@ def getsubject(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
-
 
 @admin_required
 @csrf_exempt
@@ -1444,20 +1461,26 @@ def downloadoverallreport(request):
             selected_mid = data.get('selected_mid')
             if not all([year_number, branch_code, section_number, selected_mid]):
                 return JsonResponse({'success': False, 'error': 'Missing required fields.'})
+            try:
+                section = Section.objects.get(
+                    studying_year__studying_year=year_number,
+                    branch__branch_code=branch_code,
+                    section_number=section_number
+                )
+            except Section.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Section not found.'})
+            except Section.MultipleObjectsReturned:
+                return JsonResponse({'success': False, 'error': 'Multiple sections found. Please refine your criteria.'})
 
-            section = Section.objects.get(
-                studying_year__studying_year=year_number,
-                branch__branch_code=branch_code,
-                section_number=section_number
-            )
-            branch=Branches.objects.get(branch_code=branch_code)
-            department = Departments.objects.get(department_code=section.branch.department.department_code)
+            branch = Branches.objects.filter(branch_code=branch_code).first()
+            if not branch:
+                return JsonResponse({'success': False, 'error': 'Branch not found.'})
+            department = branch.department
             department_name = department.department_name
             department_logo_url = department.department_logo.url if department.department_logo else None
             sem = section.studying_year.studying_year_name
             academic_year = section.studying_year.academic_year
             subjects = Subject.objects.filter(section=section)
-
             feedback_data = []
             for subject in subjects:
                 feedbacks = Feedback.objects.filter(subject=subject, section=section)
@@ -1539,6 +1562,10 @@ def downloadsubjectwisereport(request):
             subject_code = data.get('subject_code')
             section_code = data.get('section_number')
             selected_mid = data.get('selected_mid')
+
+            if not all([branch_code, year_of_study, subject_code, section_code, selected_mid]):
+                return JsonResponse({'error': 'Missing parameters'}, status=400)
+
             section = Section.objects.get(
                 studying_year__studying_year=year_of_study,
                 branch__branch_code=branch_code,
@@ -1546,43 +1573,27 @@ def downloadsubjectwisereport(request):
             )
             sem = section.studying_year.studying_year_name
             academic_year = section.studying_year.academic_year
-            department = Departments.objects.get(department_code=section.branch.department.department_code)
-            department_name = department.department_name
+            department_name = section.branch.department.department_name
+
             with open('static/images/college_logo.png','rb') as img_file:
-                image_data=img_file.read()
-                college_logo_url=f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
-            if not all([branch_code, year_of_study, subject_code, section_code, selected_mid]):
-                return JsonResponse({'error': 'Missing parameters'}, status=400)
+                image_data = img_file.read()
+                college_logo_url = f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
+
             question_analysis_data = get_question_wise_analysis_data(
                 branch_code, year_of_study, subject_code, section_code, selected_mid
             )
             if 'error' in question_analysis_data:
                 return JsonResponse(question_analysis_data, status=500)
+
             comments_data = get_student_comments_data(
                 branch_code, year_of_study, subject_code, section_code, selected_mid
             )
             if 'error' in comments_data:
                 return JsonResponse(comments_data, status=500)
 
-            branch = Branches.objects.get(branch_code=branch_code)
-            section = Section.objects.get(
-                studying_year__studying_year=year_of_study,
-                branch__branch_code=branch_code,
-                section_number=section_code
-            )
-            total_subject_rating = 0
-            subject_rating_count = 0
-            for feedback in Feedback.objects.filter(
-                subject__subject_code=subject_code,
-                subject__studying_year__studying_year=year_of_study,
-                subject__section__section_number=section_code,
-                subject__branch__branch_code=branch_code,
-                mid_term=int(selected_mid)
-            ):
-                rating = getattr(feedback, f'mid_term_{selected_mid}_rating', None)
-                if rating is not None:
-                    total_subject_rating += rating
-                    subject_rating_count += 1
+            branch = Branches.objects.filter(branch_code=branch_code).first()
+            if not branch:
+                return JsonResponse({'success': False, 'error': 'Branch not found.'})
             subject = Subject.objects.get(
                 subject_code=subject_code,
                 studying_year__studying_year=year_of_study,
@@ -1590,22 +1601,35 @@ def downloadsubjectwisereport(request):
                 branch__branch_code=branch_code
             )
             faculty = Faculty.objects.get(faculty_id=subject.faculty)
-            if subject_rating_count > 0:
-                total_subject_rating /= subject_rating_count
+
+            feedbacks = Feedback.objects.filter(
+                subject__subject_code=subject_code,
+                subject__studying_year__studying_year=year_of_study,
+                subject__section__section_number=section_code,
+                subject__branch__branch_code=branch_code,
+                mid_term=int(selected_mid)
+            )
+
+            total_subject_rating = sum(getattr(feedback, f'mid_term_{selected_mid}_rating', 0) for feedback in feedbacks)
+            subject_rating_count = feedbacks.count()
+            
+            average_rating = total_subject_rating / subject_rating_count if subject_rating_count > 0 else 0
+
             context = {
                 'question_analysis_data': question_analysis_data,
                 'comments_data': comments_data,
                 'branch': branch.branch_name,
                 'section_name': section.section_name,
                 'selected_mid': selected_mid,
-                'college_logo_url':college_logo_url,
-                'department_name':department_name,
-                'total_subject_rating': total_subject_rating,
+                'college_logo_url': college_logo_url,
+                'department_name': department_name,
+                'total_subject_rating': average_rating,
                 'subject_name': subject.subject_name,
-                'faculty_name': faculty.faculty_name ,
-                'sem':sem,
-                'academic_year':academic_year,
+                'faculty_name': faculty.faculty_name,
+                'sem': sem,
+                'academic_year': academic_year,
             }
+
             template_path = 'downloadsubjectwisereport.html'
             template = get_template(template_path)
             html = template.render(context)
@@ -1623,6 +1647,10 @@ def downloadsubjectwisereport(request):
             return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
         except Section.DoesNotExist:
             return JsonResponse({'error': 'Section not found.'}, status=404)
+        except Subject.DoesNotExist:
+            return JsonResponse({'error': 'Subject not found.'}, status=404)
+        except Faculty.DoesNotExist:
+            return JsonResponse({'error': 'Faculty not found.'}, status=404)
         except Exception as e:
             logger.exception('Error generating subject analysis report.')
             return JsonResponse({'error': str(e)}, status=500)
@@ -1718,8 +1746,80 @@ def get_student_comments_data(branch_code, year_of_study, subject_code, section_
         print(f"Error in get_student_comments_data: {e}")
         return {'error': str(e)}
 
+@admin_required
+def adminhod(request):
+    return render(request,'adminhod.html')
 
+@admin_required
+@require_POST
+@csrf_exempt
+def assignhod(request):
+    if request.method == 'POST':
+        if request.POST.get('form_type') == 'assignhodform':
+            department_id = request.POST.get('department')
+            faculty_id = request.POST.get('faculty')
 
+            if not (department_id and faculty_id):
+                return JsonResponse({'success': False, 'error': 'Required fields are missing.'})
+
+            try:
+                department = Departments.objects.get(department_code=department_id)
+                faculty = Faculty.objects.get(faculty_id=faculty_id)
+
+                if Hod.objects.filter(department=department).exists():
+                    return JsonResponse({'success': False, 'error': 'HOD for this department already exists.'})
+
+                hod = Hod.objects.create(
+                    department=department,
+                    faculty_name=faculty,
+                )
+                return JsonResponse({'success': True})
+            except Departments.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Invalid department selected.'})
+            except Faculty.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Invalid faculty selected.'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid form request.'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+@admin_required
+def gethod(request):
+    hods = Hod.objects.all() 
+    hod_data = [{'id': hod.id, 
+                  'department_name': hod.department.department_name, 
+                  'faculty_name': hod.faculty_name.faculty_name, 
+                  'faculty_id': hod.faculty_name.faculty_id
+                 } for hod in hods] 
+    return JsonResponse({'success': True, 'hods': hod_data})
+
+@admin_required
+@require_POST
+@csrf_exempt
+def deletehod(request):
+    if request.method == 'POST':
+        try:
+            data=json.loads(request.body)
+            department_code = data.get('department_code')
+            faculty_id = data.get('faculty_id')
+            department = Departments.objects.get(department_name=department_code)
+            faculty = Faculty.objects.get(faculty_name=faculty_id)
+            hod = Hod.objects.filter(department=department, faculty_name=faculty)
+            if hod.exists():
+                hod.delete()
+                return JsonResponse({'success': True, 'message': 'HOD deleted successfully.'})
+            else:
+                return JsonResponse({'success': False, 'error': 'No matching HOD found.'})
+        except Departments.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Department does not exist.'})
+        except Faculty.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Faculty does not exist.'})
+        except Exception as e:
+            logger.exception('Error deleting HOD.')
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request'})
+    
 #students
 
 @student_required 
@@ -2138,3 +2238,504 @@ def get_subjects_of_faculty(request):
 def faculty_logout_view(request):
     logout(request)
     return redirect('facultylogin')
+
+
+@csrf_exempt
+@hod_required
+def hodpage(request):
+    faculty_name = request.session.get('faculty_name')
+    register_number = request.session.get('register_number')
+    context = {
+        'faculty_name': faculty_name,
+        'register_number': register_number,
+
+    }
+    return render(request, 'hodpage.html', context)
+
+def hodlogin(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        try:
+            user = User.objects.get(username=username)
+            if user.role == 'faculty': 
+                faculty = Faculty.objects.get(faculty_id=username)
+                try:
+                    hod = Hod.objects.get(faculty_name=faculty) 
+                except Hod.DoesNotExist:
+                    return render(request, 'hodlogin.html', {'error_message': 'You are not authorized as a HOD.'})
+                user = authenticate(request, username=username, password=password)
+                if user is not None:
+                    login(request, user)
+                    request.session['faculty_name'] = faculty.faculty_name
+                    request.session['register_number'] = faculty.faculty_id
+                    return redirect('hodpage')  
+                else:
+                    return render(request, 'hodlogin.html', {'error_message': 'Invalid username or password'})
+            else:
+                return render(request, 'hodlogin.html', {'error_message': 'Invalid User.'})
+        except User.DoesNotExist:
+            return render(request, 'hodlogin.html', {'error_message': 'User does not exist.'})
+    return render(request, 'hodlogin.html')
+
+@hod_required
+def hodbranches(request):
+    return render(request,'hodbranches.html')
+
+@hod_required
+@csrf_exempt
+@require_POST
+def hodgetyears(request):
+    if request.method == 'POST':
+        years = StudyingYear.objects.all()
+        year_data = []
+        for year in years:
+            year_data.append({
+                'year_number': year.studying_year,
+                'year_name': year.studying_year_name,
+                'academic_year':year.academic_year
+            })
+        return JsonResponse(year_data, safe=False)
+    return JsonResponse({'success': False, 'error': 'Invalid request method or form type.'})
+
+@hod_required
+@require_POST
+@csrf_exempt
+def hodgetbranches(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        year_number = data.get('year_number')
+        faculty_id=data.get('faculty_id')
+        print(faculty_id)
+        if year_number is not None: 
+            try:
+                year_number = int(year_number)
+                faculty = Faculty.objects.get(faculty_id=faculty_id)
+                hod = Hod.objects.get(faculty_name=faculty)
+                department_code = hod.department.department_code
+                branches = Branches.objects.filter(
+                    studying_year__studying_year=year_number,
+                    department=hod.department 
+                )     
+                branch_data = [{
+                    'code': branch.branch_code, 
+                    'name': branch.branch_name, 
+                    'department': branch.department.department_name,
+                    'year_number': branch.studying_year.studying_year
+                } for branch in branches]
+                return JsonResponse(branch_data, safe=False)
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Invalid year number.'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Year number and department code are required.'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+@hod_required
+@require_POST
+@csrf_protect
+def hodsections(request):
+    try:
+        data = json.loads(request.body)
+        branch_code = data.get('branch_code')
+        year_number = data.get('year_number')
+
+        if branch_code and year_number: 
+            sections = Section.objects.filter(
+                branch__branch_code=branch_code,
+                branch__studying_year__studying_year=year_number 
+            )
+            sections_list = [{
+                'section_name': section.section_name, 
+                'section_number': section.section_number,
+                'year_number': section.studying_year.studying_year,
+                'branch_code': section.branch.branch_code
+            } for section in sections]
+            return JsonResponse(sections_list, safe=False)
+        else:
+            return JsonResponse({'success': False, 'error': 'Branch code and year number are required.'}, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@hod_required
+@csrf_exempt
+@require_POST
+def hodgetsubject(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            branch_code = data.get('branch_code')
+            year_number = data.get('year_number')
+            section_number = data.get('section_number')
+            branch = Branches.objects.get(branch_code=branch_code, studying_year__studying_year=year_number)
+            section = Section.objects.get(section_number=section_number, branch=branch, studying_year=branch.studying_year)
+            subjects = Subject.objects.filter(section=section, branch=branch, studying_year=branch.studying_year)
+            subjects_data = []
+            for subject in subjects:
+                faculty = subject.faculty
+                faculty_info = Faculty.objects.get(id=faculty.id) 
+                faculty_name = faculty_info.faculty_name
+                faculty_department = faculty_info.department.department_name
+                subjects_data.append({
+                    'subject_code': subject.subject_code,
+                    'subject_name': subject.subject_name,
+                    'subject_faculty_name': f"{faculty_name}",
+                    'subject_facultydepartment': faculty_department
+                })
+            return JsonResponse({'subjects': subjects_data}, safe=False)
+        except Branches.DoesNotExist:
+            return JsonResponse({'error': 'Branch not found.'}, status=404)
+        except Section.DoesNotExist:
+            return JsonResponse({'error': 'Section not found.'}, status=404)
+        except Subject.DoesNotExist:
+            return JsonResponse({'error': 'Subject not found.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+
+
+@hod_required
+@csrf_exempt
+@require_POST
+def hod_get_question_wise_analysis(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            branch_code = data.get('branch_code')
+            year_of_study = data.get('year_of_study')
+            subject_code = data.get('subject_code')
+            section_code = data.get('section_number')
+            mid_term = int(data.get('mid_term'))
+            if not all([branch_code, year_of_study, subject_code, section_code, mid_term]):
+                return JsonResponse({'error': 'Missing parameters'}, status=400)
+            try:
+                feedback_sample = Feedback.objects.filter(
+                    subject__subject_code=subject_code,
+                    subject__studying_year__studying_year=year_of_study,
+                    subject__section__section_number=section_code,
+                    subject__branch__branch_code=branch_code,
+                    mid_term=mid_term
+                ).select_related('subject__section__selected_exam').first()
+                if not feedback_sample:
+                    return JsonResponse({'error': 'No feedback found for the given criteria.'}, status=404)
+                exam = feedback_sample.subject.section.selected_exam.feedback_exam_code
+                exam=Exam.objects.get(feedback_exam_code=exam)
+                all_feedbacks = Feedback.objects.filter(
+                    subject__subject_code=subject_code,
+                    subject__studying_year__studying_year=year_of_study,
+                    subject__section__section_number=section_code,
+                    subject__branch__branch_code=branch_code,
+                    mid_term=mid_term
+                ).select_related('student')
+                questions = Question.objects.filter(exam=exam).prefetch_related('options')
+                analysis_data = []
+
+                for question in questions:
+                    question_data = {
+                        'question_number': question.question_number,
+                        'question_text': question.question_text,
+                        'options': {}
+                    }
+                    for option in question.options.all():
+                        option_count = 0
+                        for feedback in all_feedbacks:
+                            selected_options = getattr(feedback, f'options_mid_term_{mid_term}', None)
+                            if selected_options:
+                                try:
+                                    selected_options = eval(selected_options)
+                                    if (isinstance(selected_options, dict) and 
+                                        str(question.question_number) in selected_options and 
+                                        str(option.option_number) == selected_options[str(question.question_number)]):
+                                        option_count += 1
+                                except (SyntaxError, NameError) as e:
+                                    print(f"Error processing selected options: {e}")
+                                    pass 
+
+                        question_data['options'][option.option_text] = option_count
+                    analysis_data.append(question_data)
+                return JsonResponse({'analysis_data': analysis_data})
+            except Exception as e:
+                print(f"Error: {e}")
+                return JsonResponse({'error': str(e)}, status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+    
+@hod_required
+@csrf_exempt
+@require_POST
+def hod_get_student_comments(request):
+    if request.method == 'POST':    
+        try:
+            data = json.loads(request.body)
+            branch_code = data.get('branch_code')
+            year_of_study = data.get('year_of_study')
+            subject_code = data.get('subject_code')
+            section_code = data.get('section_number')
+            mid_term = int(data.get('mid_term'))
+            if not all([branch_code, year_of_study, subject_code, section_code, mid_term]):
+                return JsonResponse({'error': 'Missing parameters'}, status=400)
+            try:
+                feedbacks = Feedback.objects.filter(
+                    subject__subject_code=subject_code,
+                    subject__studying_year__studying_year=year_of_study,
+                    subject__section__section_number=section_code,
+                    subject__branch__branch_code=branch_code,
+                    mid_term=mid_term
+                ).select_related('student', 'subject', 'subject__section__selected_exam')
+                
+                if not feedbacks:
+                    return JsonResponse({'error': 'No feedback found for the given criteria.'}, status=404)
+
+                analysis_data = []
+                for feedback in feedbacks:
+                    student_data = {
+                        'student_id': feedback.student.student.student_id,
+                        'student_name': feedback.student.student.student_name,
+                        'comment': getattr(feedback, f'comments_mid_term_{mid_term}', None),
+                    }
+                    analysis_data.append(student_data)
+                return JsonResponse({'analysis_data': analysis_data})
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+
+@hod_required
+def hod_downloadoverallreporthtml(request):
+    return render(request,'downloadoverallreport.html')
+
+
+logger = logging.getLogger(__name__)
+
+def render_to_pdf(template_src, context_dict={}):
+    template = get_template(template_src)
+    html = template.render(context_dict)
+    logger.debug(f'Rendering PDF with HTML content: {html}')
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+    if not pdf.err:
+        return result.getvalue()
+    logger.error('Error rendering PDF: %s', pdf.err)
+    return None
+@hod_required
+@require_POST
+def hod_downloadoverallreport(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            year_number = data.get('year_number')
+            branch_code = data.get('branch_code')
+            section_number = data.get('section_number')
+            selected_mid = data.get('selected_mid')
+
+            if not all([year_number, branch_code, section_number, selected_mid]):
+                return JsonResponse({'success': False, 'error': 'Missing required fields.'})
+
+            try:
+                section = Section.objects.get(
+                    studying_year__studying_year=year_number,
+                    branch__branch_code=branch_code,
+                    section_number=section_number
+                )
+            except Section.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Section not found.'})
+            except Section.MultipleObjectsReturned:
+                return JsonResponse({'success': False, 'error': 'Multiple sections found. Please refine your criteria.'})
+
+            branch = Branches.objects.filter(branch_code=branch_code).first()
+            if not branch:
+                return JsonResponse({'success': False, 'error': 'Branch not found.'})
+
+            department = branch.department
+            department_name = department.department_name
+            department_logo_url = department.department_logo.url if department.department_logo else None
+            sem = section.studying_year.studying_year_name
+            academic_year = section.studying_year.academic_year
+            subjects = Subject.objects.filter(section=section)
+
+            feedback_data = []
+            for subject in subjects:
+                feedbacks = Feedback.objects.filter(subject=subject, section=section)
+                total_rating = 0
+                feedback_count = 0
+
+                for feedback in feedbacks:
+                    if selected_mid == '1' and feedback.mid_term_1_rating:
+                        total_rating += feedback.mid_term_1_rating
+                        feedback_count += 1
+                    elif selected_mid == '2' and feedback.mid_term_2_rating:
+                        total_rating += feedback.mid_term_2_rating
+                        feedback_count += 1
+
+                average_rating = total_rating / feedback_count if feedback_count else 0
+                faculty_id = subject.faculty
+                faculty_name=Faculty.objects.get(faculty_id=faculty_id)
+                feedback_data.append({
+                    'subject_code': subject.subject_code,
+                    'subject_name': subject.subject_name,
+                    'faculty_name': faculty_name.faculty_name,
+                    'average_rating': average_rating
+                })
+            if department.department_logo:
+                with open(department.department_logo.path, 'rb') as img_file:
+                    image_data = img_file.read()
+                    department_logo_url = f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
+            else:
+                department_logo_url = None 
+
+            with open('static/images/college_logo.png','rb') as img_file:
+                image_data=img_file.read()
+                college_logo_url=f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
+            with open('static/images/15217B18-D3CE-4794-BA0D-C3F24714219E_1_201_a.jpeg','rb') as img_file:
+                image_data=img_file.read()
+                developer_logo_url=f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
+            context = {
+                'feedback_data': feedback_data,
+                'department_name': department_name,
+                'department_logo_url': department_logo_url,
+                'college_logo_url':college_logo_url,
+                'developer_logo_url':developer_logo_url,
+                'sem': sem,
+                'academic_year': academic_year,
+                'branch':branch.branch_name,
+                'section_name':section.section_name,
+                'selected_mid': selected_mid
+            }
+            pdf_data = render_to_pdf('downloadoverallreport.html', context)
+            filename = f"{branch.branch_name}_{section.section_name}_{sem}_Midterm_{selected_mid}_overall_report.pdf"
+            if pdf_data:
+                response = HttpResponse(pdf_data, content_type='application/pdf')
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+            else:
+                return HttpResponse("Error Rendering PDF", status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
+        except Section.DoesNotExist:
+            return JsonResponse({'error': 'Section not found.'}, status=404)
+        except Exception as e:
+            logger.exception('Unexpected error occurred while generating the report.')
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return render(request, 'downloadoverallreport.html')
+
+logger = logging.getLogger(__name__)
+
+
+@hod_required
+@csrf_exempt
+@require_POST
+def hod_downloadsubjectwisereport(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            branch_code = data.get('branch_code')
+            year_of_study = data.get('year_of_study')
+            subject_code = data.get('subject_code')
+            section_code = data.get('section_number')
+            selected_mid = data.get('selected_mid')
+            section = Section.objects.get(
+                studying_year__studying_year=year_of_study,
+                branch__branch_code=branch_code,
+                section_number=section_code
+            )
+            sem = section.studying_year.studying_year_name
+            academic_year = section.studying_year.academic_year
+            department = Departments.objects.get(department_code=section.branch.department.department_code)
+            department_name = department.department_name
+            with open('static/images/college_logo.png','rb') as img_file:
+                image_data=img_file.read()
+                college_logo_url=f'data:image/png;base64,{base64.b64encode(image_data).decode()}'
+            if not all([branch_code, year_of_study, subject_code, section_code, selected_mid]):
+                return JsonResponse({'error': 'Missing parameters'}, status=400)
+            question_analysis_data = get_question_wise_analysis_data(
+                branch_code, year_of_study, subject_code, section_code, selected_mid
+            )
+            if 'error' in question_analysis_data:
+                return JsonResponse(question_analysis_data, status=500)
+            comments_data = get_student_comments_data(
+                branch_code, year_of_study, subject_code, section_code, selected_mid
+            )
+            if 'error' in comments_data:
+                return JsonResponse(comments_data, status=500)
+
+            branch = Branches.objects.get(branch_code=branch_code)
+            section = Section.objects.get(
+                studying_year__studying_year=year_of_study,
+                branch__branch_code=branch_code,
+                section_number=section_code
+            )
+            total_subject_rating = 0
+            subject_rating_count = 0
+            for feedback in Feedback.objects.filter(
+                subject__subject_code=subject_code,
+                subject__studying_year__studying_year=year_of_study,
+                subject__section__section_number=section_code,
+                subject__branch__branch_code=branch_code,
+                mid_term=int(selected_mid)
+            ):
+                rating = getattr(feedback, f'mid_term_{selected_mid}_rating', None)
+                if rating is not None:
+                    total_subject_rating += rating
+                    subject_rating_count += 1
+            subject = Subject.objects.get(
+                subject_code=subject_code,
+                studying_year__studying_year=year_of_study,
+                section__section_number=section_code,
+                branch__branch_code=branch_code
+            )
+            faculty = Faculty.objects.get(faculty_id=subject.faculty)
+            if subject_rating_count > 0:
+                total_subject_rating /= subject_rating_count
+            context = {
+                'question_analysis_data': question_analysis_data,
+                'comments_data': comments_data,
+                'branch': branch.branch_name,
+                'section_name': section.section_name,
+                'selected_mid': selected_mid,
+                'college_logo_url':college_logo_url,
+                'department_name':department_name,
+                'total_subject_rating': total_subject_rating,
+                'subject_name': subject.subject_name,
+                'faculty_name': faculty.faculty_name ,
+                'sem':sem,
+                'academic_year':academic_year,
+            }
+            template_path = 'downloadsubjectwisereport.html'
+            template = get_template(template_path)
+            html = template.render(context)
+
+            response = HttpResponse(content_type='application/pdf')
+            filename = f'{branch.branch_name}_{section.section_name}_Midterm_{selected_mid}_{subject.subject_name}.pdf'
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+            pisa_status = pisa.CreatePDF(html, dest=response)
+            if pisa_status.err:
+                return HttpResponse('We had some errors <pre>' + html + '</pre>')
+            return response
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
+        except Section.DoesNotExist:
+            return JsonResponse({'error': 'Section not found.'}, status=404)
+        except Exception as e:
+            logger.exception('Error generating subject analysis report.')
+            return JsonResponse({'error': str(e)}, status=500)
+
+@hod_required 
+def hodfeedback(request):
+    return render(request,'hodfeedback.html')
+
+@hod_required
+def hodfeedbackofsubject(request):
+    return render(request,'hodfeedbackofsubject.html')

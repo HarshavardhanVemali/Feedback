@@ -1,4 +1,4 @@
-.addbranchesform-container {
+.addbranchesform-container,.assignhodform-container {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -43,7 +43,7 @@
 .move-right:hover{
     background-color: lightblue;
 }
-.addbranchesform-container form {
+.addbranchesform-container form ,.assignhodform-container form{
     display: flex;
     flex-direction: column;
 }
@@ -72,52 +72,62 @@
     justify-content: center;
     cursor: pointer;
 }
-.branchestablecontainer{
+.branchestablecontainer,#hod{
     display: flex;
     justify-content: center;
 }
-.editbranches{
+.editbranches,.edithod{
     margin-left: 40px;
     margin-right: 40px;
     margin-top: 10px;
 }
 
-#branchestable{
+#branchestable,#hodtable,.hod-table{
     width: 90%;
     border-collapse: collapse;
     border: 1px solid #ddd;
 }
+.hod-table{
+    margin-top: 20px;
+    font-size: medium !important;
+}
+.hod-table th{
+    font-weight: bold !important;
+}
+.hod-table td{
+    font-weight: 100 !important;
+}
 #branchestable{
     border-radius: 10px;
 }
-#branchestable th, #branchestable td {
+#branchestable th, #branchestable td ,#hodtable th,#hodtable td,.hod-table th,.hod-table td{
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
     font-weight: 200;
 }
 
-#branchestable th {
+#branchestable th ,#hodtable th,.hod-table th{
     background-color: #e6ffe6;
     color: #000;
 }
 
-#branchestable tbody tr:nth-child(even) {
+#branchestable tbody tr:nth-child(even), #hodtable tbody tr:nth-child(even),.hod-table tbody tr:nth-child(even){
     background-color: #f2f8ff;
     transition: background-color 0.3s ease;
     color: #0066cc;
 }
 
-#branchestable tbody tr:nth-child(odd) {
+#branchestable tbody tr:nth-child(odd) , #hodtable tbody tr:nth-child(odd),.hod-table tbody tr:nth-child(odd){
     background-color: #ffffff;
     transition: background-color 0.3s ease;
 }
 
-#branchestable tbody tr:hover {
+#branchestable tbody tr:hover,#hodtable tbody tr:hover,.hod-table tbody tr:hover {
     background-color: #f1f1f1;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
-.showbranches{
+.showbranches,.showhod{
     margin-left: 40px;
     font-size: 20px;
     margin-top: 10px;
@@ -143,4 +153,17 @@
 }
 .branch:hover{
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+#assignhod{
+    width: 100px;
+    padding: 5px;
+    height: 35px;
+    align-items: center;
+    border-radius: 4px;
+    background-color: dodgerblue;
+    border: none;
+    cursor: pointer;
+}
+#assignhod:hover{
+    background-color: lightskyblue;
 }

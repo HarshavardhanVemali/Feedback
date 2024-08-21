@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminstudent.css' %}">
+    <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
     <title>MVGR(A) ADMIN</title>
     <link
     href="https://unpkg.com/aos@2.3.1/dist/aos.css"
@@ -30,12 +31,16 @@
             <ul>
                 <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
                 <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+                <li><a class="nav-link" href="{% url 'adminhod' %}"><span>HOD</span></a></li>
                 <li><a class="nav-link active" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
                 <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
             </ul>
         </div>
     </header>
     <main>
+        <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+            <div class="spinner"></div>
+        </div>
         <div class="breadcrumb"> </div> 
         <div class="subnavlinks">
             <button id="students-container" onclick="toggleContent('students')">
@@ -140,7 +145,7 @@
                         </div>
                         <div class="form-row">
                             <label for="startingnumber">Starting Number</label>
-                            <input type="number" name="startingnumber" id="startingnumber" placeholder="Ex: 01" required>
+                            <input type="number" name="startingnumber" id="startingnumber" min="1" placeholder="Ex: 01" required>
                         </div>
                         <div class="form-row">
                             <label for="endingnumber">Ending Number</label>
@@ -777,6 +782,7 @@
             formData.append('branch_code', branchCode);
             formData.append('year_number',yearNumber);
             formData.append('section_number',sectionNumber);
+            showSpinner();
             fetch(form.action, {
                 method: form.method,
                 headers: {
@@ -786,6 +792,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if (data.success) {
                     alert('Student added successfully.');
                     form.reset();
@@ -793,12 +800,14 @@
                     document.getElementById('addsingleuserform-container').classList.add('hidden');
                     document.querySelector('.overlay-container').style.display='none';
                     getStudents();
+                    
                 }
                 else{
-                    alert('Failes to add students.')
+                    alert('Failes to add students:',error)
                 }
             })
             .catch(error => {
+                hideSpinner();
                 console.error('Error adding students:', error);
                 alert('Error adding students. Please try again later.',error);
             });
@@ -810,6 +819,7 @@
             formData.append('branch_code', branchCode);
             formData.append('year_number',yearNumber);
             formData.append('section_number',sectionNumber);
+            showSpinner();
             fetch(form.action, {
                 method: form.method,
                 headers: {
@@ -819,6 +829,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if (data.success) {
                     alert('Students added successfully.');
                     form.reset();
@@ -828,10 +839,11 @@
                     getStudents();
                 }
                 else{
-                    alert('Failes to add students.')
+                    alert('Failes to add students:',error)
                 }
             })
             .catch(error => {
+                hideSpinner();
                 console.error('Error adding students:', error);
                 alert('Error adding students. Please try again later.',error);
             });
@@ -858,7 +870,7 @@
                     getsubjects();
                 }
                 else{
-                    alert('Failes to add Subject.')
+                    alert('Failes to add Subject:',error)
                 }
             })
             .catch(error => {
@@ -887,7 +899,7 @@
                     alert('Changes saved successfully');
                     getStudents();
                 } else {
-                    alert('Failed to save student changes');
+                    alert('Failed to save student changes:',error);
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -958,6 +970,13 @@
                 alert('An error occurred while downloading the report.');
             });
         });
+        function showSpinner() {
+            document.getElementById('loading-spinner').style.display = 'flex';
+        }
+
+        function hideSpinner() {
+            document.getElementById('loading-spinner').style.display = 'none';
+        }
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {

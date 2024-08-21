@@ -42,6 +42,12 @@ class Faculty(User):
     def __str__(self):
         return self.faculty_name
 
+class Hod(models.Model):
+    department=models.ForeignKey(Departments,on_delete=models.CASCADE)
+    faculty_name=models.ForeignKey(Faculty,on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('department', 'faculty_name')
+
 class StudyingYear(models.Model):
     studying_year=models.PositiveIntegerField(unique=True,default=1)
     studying_year_name=models.CharField(max_length=40)

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminstudent.css' %}">
+    <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
     <title>MVGR(A) ADMIN</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/college_logo.png' %}"> 
 </head>
@@ -26,12 +27,17 @@
             <ul>
                 <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
                 <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+                <li><a class="nav-link" href="{% url 'adminhod' %}"><span>HOD</span></a></li>
                 <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
                 <li><a class="nav-link active" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
             </ul>
         </div>
     </header>
     <main>
+        <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+        
         <div class="subnav">
             <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
                 <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
@@ -258,6 +264,7 @@
         function deleteQuestion(button) {
             const questionNumber = button.parentElement.dataset.questionNumber; 
             if (confirm("Are you sure you want to delete this question? This action cannot be undone.")) {
+                showSpinner();
                 fetch('/deletequestion/', {
                     method: 'POST',
                     headers: {
@@ -267,14 +274,17 @@
                     body: JSON.stringify({ question_number: questionNumber, exam_code: ExamCode }) 
                 })
                 .then(response => {
+                    hideSpinner();
                     if (response.ok) {
                         alert('Deleted Successfully.');
                         getquestions(ExamCode);
                     } else {
                         alert('Failed to delete Question.');
                     }
+                     
                 })
                 .catch(error => console.error('Error:', error));
+                hideSpinner();
             }
         }
         function saveQuestion(questionIndex) {
@@ -369,7 +379,13 @@
                 alert('Error adding question. Please try again later.');
             });
         });
-            
+        function showSpinner() {
+            document.getElementById('loading-spinner').style.display = 'flex';
+        }
+
+        function hideSpinner() {
+            document.getElementById('loading-spinner').style.display = 'none';
+        }
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {

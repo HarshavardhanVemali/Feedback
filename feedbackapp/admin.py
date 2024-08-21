@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from .models import (
     FailedLoginAttempts, Branches, Faculty, Departments, Student, 
-    Subject, Section, Feedback, Question, User,StudyingYear,Exam,QuestionOption
+    Subject, Section, Feedback, Question, User,StudyingYear,Exam,QuestionOption,Hod
 )
 
 class FailedLoginAttemptsAdmin(admin.ModelAdmin):
@@ -94,6 +94,11 @@ class UserAdmin(admin.ModelAdmin):
     verbose_name = 'User'
     verbose_name_plural = 'Users'
 
+class HodAdmin(admin.ModelAdmin):
+    list_display=('department','faculty_name')
+    search_fields=('department','faculty_name')
+
+
 admin.site.register(FailedLoginAttempts, FailedLoginAttemptsAdmin)
 admin.site.register(Departments, DepartmentsAdmin)
 admin.site.register(Branches, BranchesAdmin)
@@ -107,3 +112,4 @@ admin.site.register(Feedback, FeedbackAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(QuestionOption,QuestionOptionsAdmin)
 admin.site.register(User, UserAdmin)
+admin.site.register(Hod,HodAdmin)

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/adminfaculty.css' %}">
+    <link rel="stylesheet" href="{% static 'css/adminbranches.css' %}">
+    <title>MVGR(A) ADMIN</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
+</head>
+<body>
+    <header>
+        <div id="college_title">
+            <div id="college_logo">
+                <a href="https://www.mvgrce.com/" target="_blank">
+                    <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
+                </a>
+            </div>
+            <div id="college_sub_title">
+                <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+                <h1 id="title_name">Feedback Management</h1>
+            </div>
+        </div>
+        <div class="navbar-in-admin">
+            <ul>
+                <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
+                <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
+                <li><a class="nav-link active" href="{% url 'adminhod' %}"><span>HOD</span></a></li>
+                <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
+                <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
+
+            </ul>
+        </div>
+    </header>
+    <main>
+
+        <div class="subnav">
+            <div class="addbranches">
+                <button id="addbranchesbutton" onclick="showAddBrachesForm()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>Assign Hod</span>
+                </button>
+                
+            </div>
+            <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
+                <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Logout</span></button>
+            </div>
+            <div class="overlay">
+                <div id="assignhodform-container" class="assignhodform-container hidden"> 
+                    <svg id="closebtn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="hideAddBranchesForm()">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    <form method="post" enctype="multipart/form-data" id="assignhodform" action="{% url 'assignhod' %}"> 
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="assignhodform">
+                        <div id="form-row">
+                            <label for="department">Department:</label>
+                            <select name="department" id="facultydepartment" required> 
+                                <option value="">Select Department</option>
+                                </select>
+                        </div>
+                        <div id="form-row">
+                            <label for="faculty">Faculty:</label>
+                            <select name="faculty" id="faculty" required>
+                                <option value="">Select Faculty</option> 
+                            </select>
+                        </div>
+                        <div class="button-container"> 
+                            <button type="submit" id="assignhod">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="showhod" id="showhodContainer">
+            <div id="hod">
+                
+            </div>
+        </div>
+    </main>
+</body>
+<script>
+    function showAddBrachesForm() {
+        document.getElementById('assignhodform-container').classList.remove('hidden');
+        document.querySelector('.overlay').classList.add('active');
+    }
+
+    function hideAddBranchesForm() {
+        document.getElementById('assignhodform-container').classList.add('hidden');
+        document.querySelector('.overlay').classList.remove('active');
+    }
+
+    function togglebranches() {
+        const showHodDiv = document.getElementById('showhodContainer');
+        const editHodDiv = document.getElementById('edithodContainer'); 
+        if (showHodDiv.style.display === 'none') {
+            showHodDiv.style.display = 'block';
+            editHodDiv.style.display = 'none';
+        } else {
+            showHodDiv.style.display = 'none';
+            editHodDiv.style.display = 'block';
+        }
+    }
+    document.getElementById('assignhod').addEventListener('submit', function(event){
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        fetch('assignhod/', { 
+            method: form.method,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("HOD assigned successfully.");
+                form.reset();
+                hideAddBranchesForm(); 
+                getHod();
+            } else {
+                alert('Failed to assign HOD: ' + data.error); 
+            }
+        })
+        .catch(error => {
+                console.error('Error fetching faculty:', error);
+            });
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+        getHod(); 
+        getDepartments();
+    }); 
+    function getDepartments() {
+            fetch('/getdepartments/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const departmentSelect = document.getElementById('facultydepartment');
+                data.forEach(department => {    
+                    const option = document.createElement('option');
+                    option.value = department.code;
+                    option.text = `${department.name}`;
+                    departmentSelect.add(option);
+                });
+                departmentSelect.addEventListener('change', getFaculty);
+            })
+            .catch(error => {
+                console.error('Error fetching departments:', error);
+            });
+        }
+        function getFaculty() {
+            departmentCode = document.getElementById('facultydepartment').value;
+            const facultySelect = document.getElementById('faculty');
+            facultySelect.innerHTML = '<option value="" disabled selected>Faculty</option>'; 
+            fetch('/getfaculty/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ department_code: departmentCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.faculty && data.faculty.length > 0) {
+                    data.faculty.forEach(faculty => {
+                        const option = document.createElement('option');
+                        option.value = faculty.facultyid;
+                        option.text = `${faculty.name}(${faculty.facultyid})`;
+                        facultySelect.add(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.text = "No Faculty Found";
+                    facultySelect.add(option);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching faculty:', error);
+            });
+        }
+       function getHod() {
+           fetch('/gethod/', { 
+               method: 'GET',
+               headers: {
+                   'X-CSRFToken': getCookie('csrftoken')
+               },
+           })
+           .then(response => response.json())
+           .then(data => {
+               if (data.success) {
+                   populateHodDisplay(data.hods); 
+               } else {
+                   alert('Error fetching HOD data.');
+               }
+           })
+           .catch(error => {
+               console.error('Error fetching HOD data:', error);
+               alert('Error fetching HOD data. Please try again later.');
+           });
+       }
+       function populateHodDisplay(hods) {
+        const hodContainer = document.getElementById('hod');
+        hodContainer.innerHTML = '';
+
+        if (hods.length === 0) {
+            hodContainer.innerHTML = 'No HODs assigned yet.';
+            return;
+        }
+        const table = document.createElement('table');
+        table.className = 'hod-table'; 
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>HOD</th> 
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        `;
+        const tbody = table.querySelector('tbody'); 
+
+        hods.forEach(hod => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${hod.department_name}</td> 
+                <td>${hod.faculty_name}</td>
+                 <td>
+                    <button onclick="deleteHod('${hod.department_name}', '${hod.faculty_name}');" class="delete-button">
+                        <svg style="margin-right: 3px;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="h-5 w-5 shrink-0">
+                                <path fill="currentColor" fill-rule="evenodd" d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1" clip-rule="evenodd"></path>
+                            </svg>
+                        Delete
+                    </button>
+                </td> 
+            `;
+            tbody.appendChild(row); 
+        });
+
+        hodContainer.appendChild(table); 
+    }
+    function deleteHod(departmentCode, facultyId) { 
+        console.log(facultyId,departmentCode);
+        fetch('/deletehod/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                department_code: departmentCode, 
+                faculty_id: facultyId 
+            }) 
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('HOD deleted successfully.'); 
+                getHod(); 
+            } else {
+                alert('Error deleting HOD: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting HOD data:', error);
+            alert('Error deleting HOD data. Please try again later.');
+        });
+    }
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+</script>
+</html>

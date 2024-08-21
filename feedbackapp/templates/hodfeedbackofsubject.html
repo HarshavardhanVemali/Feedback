@@ -25,15 +25,6 @@
                 <h1 id="title_name">Feedback Management</h1>
             </div>
         </div>
-        <div class="navbar-in-admin">
-            <ul>
-                <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
-                <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
-                <li><a class="nav-link" href="{% url 'adminhod' %}"><span>HOD</span></a></li>
-                <li><a class="nav-link active" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
-                <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
-            </ul>
-        </div>
     </header>
     <main>  
         <div class="subnavlinks">
@@ -62,7 +53,6 @@
                 <p class="feedback-title">Mid-1 Analysis</p>
             </div>
             <div class="analysis-tabs"> 
-                <button class="analysis-tab" onclick="showAnalysis('student-analysis-mid1')">Student Wise</button>
                 <button class="analysis-tab" onclick="showAnalysis('question-analysis-mid1')">Question Wise</button>
                 <button class="analysis-tab" onclick="showAnalysis('comments-analysis-mid1')">Comments</button>
                 <button class="analysis-tab" id="printbutton" onclick="showAnalysis('download-analysis-mid1')">
@@ -73,7 +63,6 @@
                 </button>
             </div>
             <div id="total-average-rating-mid1"></div> 
-            <div class="analysis-content" id="student-analysis-mid1"></div>
             <div class="analysis-content" id="question-analysis-mid1"></div>
             <div class="analysis-content" id="comments-analysis-mid1"></div>
         </div> 
@@ -83,7 +72,7 @@
                 <p class="feedback-title">Mid-2 Analysis</p>
             </div>
             <div class="analysis-tabs">
-                <button class="analysis-tab" onclick="showAnalysis('student-analysis-mid2')">Student Wise</button>
+
                 <button class="analysis-tab" onclick="showAnalysis('question-analysis-mid2')">Question Wise</button>
                 <button class="analysis-tab" onclick="showAnalysis('comments-analysis-mid2')">Comments</button>
                 <button class="analysis-tab" id="printbutton" onclick="showAnalysis('download-analysis-mid2')">
@@ -94,7 +83,6 @@
                 </button>
             </div>
             <div id="total-average-rating-mid2"></div> 
-            <div class="analysis-content" id="student-analysis-mid2"></div>
             <div class="analysis-content" id="question-analysis-mid2"></div>
             <div class="analysis-content" id="comments-analysis-mid2"></div>
         </div> 
@@ -176,7 +164,7 @@
     function getfeedbackofthesubject(midterm, analysisType) { 
         let fetchUrl = (analysisType === 'student-analysis') 
             ? '/get_student_wise_analysis/' 
-            : '/get_question_wise_analysis/'; 
+            : 'hod_get_question_wise_analysis/'; 
 
         fetch(fetchUrl, {
             method: 'POST',
@@ -362,7 +350,7 @@
     }
 
     function getstudentcomments(midterm) {
-        fetch('/get_student_comments/', {
+        fetch('/hod_get_student_comments/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -397,15 +385,11 @@
         table.classList.add('comments-table', 'center-table');
         const thead = table.createTHead();
         const headerRow = thead.insertRow();
-        headerRow.insertCell().textContent = 'Student ID';
-        headerRow.insertCell().textContent = 'Student Name';
         headerRow.insertCell().textContent = 'Comment';
         const tbody = table.createTBody();
         commentsData.forEach(comment => {
             if (comment.comment.trim() !== "") {
                 const row = tbody.insertRow();
-                row.insertCell().textContent = comment.student_id;
-                row.insertCell().textContent = comment.student_name;
                 row.insertCell().textContent = comment.comment; 
             }
         });
@@ -421,7 +405,7 @@
         const yearNumber = urlParams.get('year_of_study');
         const sectionNumber = urlParams.get('section_number');
 
-        fetch('/downloadsubjectwisereport/', { 
+        fetch('/hod_downloadsubjectwisereport/', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/adminstudent.css' %}">
+    <title>MVGR(A) ADMIN</title>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/college_logo.png' %}"> 
+</head>
+<body>
+    <header>
+        <div id="college_title">
+            <div id="college_logo">
+                <a href="https://www.mvgrce.com/" target="_blank">
+                    <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
+                </a>
+            </div>
+            <div id="college_sub_title">
+                <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
+                <h1 id="title_name">Feedback Management</h1>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="breadcrumb"> </div> 
+        <div class="seefeedback-container" id="seefeedback-content">
+            <div class="subnav">
+                <div class="printbutton">
+                    <form id="downloadoverallreportform">
+                        <select name="selectmid" id="selectmid" required>
+                            <option value="" disabled selected>Select-Mid </option>
+                            <option value="1">Mid-1</option>
+                            <option value="2">Mid-2</option>
+                        </select>
+                        <button id="printbutton" type="submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 8h-4V3H9v5H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                            </svg>
+                            <span>Download Overall Report</span>
+                        </button>
+                    </form>
+                </div>
+                <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
+                    <button id="logout-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+            <div class="getactivesubjects">
+                </div>
+        </div>
+    </main>
+    <script>
+        let branchCode;
+        let yearNumber;
+        let sectionNumber;
+        let facultyId;
+        document.addEventListener('DOMContentLoaded', () => {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            branchCode = urlParams.get('branch_code');
+            yearNumber = urlParams.get('year');
+            sectionNumber = urlParams.get('section_number');
+            facultyId=urlParams.get('faculty_id');
+            const sectionName = urlParams.get('section_name');
+            const branchName = urlParams.get('branch_name');
+            getsubjects();
+            updateBreadcrumbs(yearNumber, branchName, sectionNumber, sectionName); 
+
+            document.getElementById('downloadoverallreportform').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const selected_mid = document.getElementById('selectmid').value;
+
+                fetch('/hod_downloadoverallreport/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        'year_number': yearNumber,
+                        'branch_code': branchCode,
+                        'section_number': sectionNumber,
+                        'selected_mid': selected_mid
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.blob(); 
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `overall_report.pdf`; 
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error('Error downloading report:', error);
+                    alert('An error occurred while downloading the report.');
+                });
+            });
+        });
+        
+        function getsubjects(){
+            fetch('/hodgetsubject/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ 
+                        branch_code: branchCode, 
+                        year_number: yearNumber, 
+                        section_number: sectionNumber 
+                    })
+            }).then(response => response.json())
+            .then(data => { 
+                const activeSubjectsDiv = document.querySelector('.getactivesubjects');
+                
+                activeSubjectsDiv.innerHTML = ''; 
+
+                if (data.subjects && data.subjects.length > 0) {
+                    data.subjects.forEach(subject => {
+                        const subjectDiv = document.createElement('div'); 
+                        subjectDiv.classList.add('subject-container'); 
+                        subjectDiv.innerHTML=`
+                            <div class="image-name-group"> 
+                            <span style="font-weight: 200">${subject.subject_name} (${subject.subject_faculty_name})</span>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
+                        `;
+                        subjectDiv.addEventListener('click', () => {
+                            const redirectUrl = `/hodfeedbackofsubject/?subject_code=${subject.subject_code}&year_of_study=${yearNumber}&section_number=${sectionNumber}&branch_code=${branchCode}`;
+                            window.location.href = redirectUrl;
+                        });
+
+                        activeSubjectsDiv.appendChild(subjectDiv);
+                    });
+                } else {
+                    activeSubjectsDiv.textContent = 'No active subjects found.';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching subjects:', error);
+            });
+        }
+        function updateBreadcrumbs(yearNumber, branchName, sectionNumber, sectionName) {
+            const breadcrumbContainer = document.querySelector('.breadcrumb');
+            breadcrumbContainer.innerHTML = `
+                <a href="{% url 'hodpage' %}">/Students</a> / 
+                <a href="/hodbranches/?year=${yearNumber}&faculty_id=${facultyId}">Year ${yearNumber}</a> /
+                ${branchName ? `<a href="/hodsections.html?year=${yearNumber}&faculty_id=${facultyId}&branch_code=${branchCode}&branch_name=${branchName}">${branchName}</a> /` : ''} 
+                ${sectionName ? `<span>${sectionName}</span>` : ''} 
+            `;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+    
+</body>
+</html>
