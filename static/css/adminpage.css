@@ -225,6 +225,7 @@ body {
 .departmenttablecontainer{
     display: flex;
     justify-content: center;
+    margin-bottom: 20px;
 }
 #Departmenttable {
     width: 90%;

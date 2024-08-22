@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminfaculty.css' %}">
+    <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
+    <script src="{% static 'js/scripts.js' %}"></script>
     <title>MVGR(A) ADMIN</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
 </head>
@@ -26,13 +28,16 @@
         <ul>
             <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
             <li><a class="nav-link active" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
-            <li><a class="nav-link" href="{% url 'adminhod' %}"><span>HOD</span></a></li>
+            <li><a class="nav-link" href="{% url 'adminhod' %}"><span>Hod</span></a></li>
             <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
             <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
         </ul>
     </div>
 </header>
 <main>
+    <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+        <div class="spinner"></div>
+    </div>
     <div class="subnav">
         <div class="addbranches">
             <button id="backbutton" onclick="window.location.href='{% url 'adminfaculty' %}'">
@@ -128,6 +133,7 @@
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const departmentCode = urlParams.get('dept_code');
+        showSpinner();
         fetch('/getfaculty/', {
             method: 'POST',
             headers: {
@@ -138,6 +144,7 @@
         })
         .then(response => response.json())
         .then(data => {
+            hideSpinner();
             const facultyList = document.getElementById('faculty-list');
             const departmentName = data.department_name;
             const departmentImage=data.department_image;
@@ -183,6 +190,7 @@
             }
         })
         .catch(error => {
+            hideSpinner();
             console.error('Error fetching faculty:', error);
         });
     }
@@ -190,7 +198,7 @@
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
-
+        showSpinner();
         fetch(form.action, {
             method: form.method,
             headers: {
@@ -200,16 +208,20 @@
         })
         .then(response => response.json())
         .then(data => {
+            hideSpinner();
             if (data.success) {
                 alert('Faculty added successfully.');
                 form.reset();
                 document.querySelector('.overlay').classList.remove('active');
                 getfaculty();
+                hideSpinner();
             } else {
                 alert('Failed to add Faculty: ' + data.error);
+                hideSpinner();
             }
         })
         .catch(error => {
+            hideSpinner();
             console.error('Error adding faculty:', error);
             alert('Error adding faculty Please try again later.');
         });
@@ -230,6 +242,7 @@
         getfaculty();
         return;
     }
+    showSpinner();
     fetch('/savefacultychanges/', {
         method: 'POST',
         headers: {
@@ -239,6 +252,7 @@
         body: JSON.stringify({ faculty_id: facultyId, faculty_name: FacultyName })
     })
     .then(response => {
+        hideSpinner();
         if (!response.ok) {
             throw new Error('Network response was not ok.');
         }
@@ -248,17 +262,21 @@
         if(data.success){
             alert('Changes saved successfully');
             getfaculty();
+            hideSpinner();
         }
         else{
             alert('Unable to save changes.');
+            hideSpinner();
         }
     })
     .catch(error => {
         console.error('Error saving changes:', error);
         alert('Error saving changes. Please try again later.');
+        hideSpinner();
     });
     }
     function deleteDepartment(facultyId){
+        showSpinner();
         fetch('/deletefaculty/',{
             method:'POST',
             headers:{
@@ -268,23 +286,28 @@
             body:JSON.stringify({faculty_id:facultyId})
         })
         .then(response=>{
+            hideSpinner();
             if(!response.ok){
                 throw new Error('Network response was not ok.');
             }
             return response.json();
         })
         .then(data=>{
+            hideSpinner();
             if(data.success){
                 alert('Deleted Successfully.');
                 getfaculty();
+                hideSpinner();
             }
             else{
                 alert('Failed to delete.');
+                hideSpinner();
             }
         })
         .catch(error=>{
             console.error('Error saving changes:', error);
             alert('Error saving changes. Please try again later.');
+            hideSpinner();
         });
     }
     document.addEventListener('DOMContentLoaded', () => {

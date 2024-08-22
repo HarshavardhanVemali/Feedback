@@ -7,7 +7,9 @@
     <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminstudent.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminfeedbackofsubject.css' %}">
-    <title>MVGR(A) ADMIN</title>
+    <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
+    <script src="{% static 'js/scripts.js' %}"></script>
+    <title>MVGR(A) Feedback HOD</title>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/college_logo.png' %}"> 
@@ -27,6 +29,9 @@
         </div>
     </header>
     <main>  
+        <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+            <div class="spinner"></div>
+        </div>
         <div class="subnavlinks">
             <button id="mid1-container" onclick="toggleContent('mid1')">
                 <span>Mid-1</span>
@@ -35,8 +40,8 @@
                 <span>Mid-2</span>
             </button>
             <div class="subnav">
-                <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
-                    <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
+                <div class="logoutbutton" onclick="window.location.href='{% url 'hodlogout' %}'">
+                    <button id="logout-button" onclick="window.location.href='{% url 'hodlogout' %}'">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                             <polyline points="16 17 21 12 16 7" />
@@ -165,7 +170,7 @@
         let fetchUrl = (analysisType === 'student-analysis') 
             ? '/get_student_wise_analysis/' 
             : 'hod_get_question_wise_analysis/'; 
-
+        showSpinner();
         fetch(fetchUrl, {
             method: 'POST',
             headers: {
@@ -182,17 +187,24 @@
         })
         .then(response => response.json())
         .then(data => {
+            hideSpinner();
             if (analysisType === 'student-analysis' && data.analysis_data) {
+                hideSpinner();
                 displayStudentAnalysis(data.analysis_data, midterm);
+               
             } else if (analysisType === 'question-analysis' && data.analysis_data) {
+                hideSpinner();
                 displayQuestionAnalysis(data.analysis_data, midterm);
+                
             } else {
                 alert(data.error || 'No analysis data found.');
+                hideSpinner();
             }
         })
         .catch(error => {
             console.error('Error fetching analysis data:', error);
             alert('Error fetching analysis data.');
+            hideSpinner();
         });
     }
 
@@ -350,6 +362,7 @@
     }
 
     function getstudentcomments(midterm) {
+        showSpinner();
         fetch('/hod_get_student_comments/', {
             method: 'POST',
             headers: {
@@ -366,15 +379,19 @@
         })
         .then(response => response.json())
         .then(data => {
+            hideSpinner();
             if (data.analysis_data) {
                 displayStudentComments(data.analysis_data, midterm);
+                hideSpinner();
             } else {
                 alert(data.error || 'No comments found.');
+                hideSpinner();
             }
         })
         .catch(error => {
             console.error('Error fetching comments data:', error);
             alert('Error fetching comments data.');
+            hideSpinner();
         });
     }
 
@@ -404,7 +421,7 @@
         const branchCode = urlParams.get('branch_code');
         const yearNumber = urlParams.get('year_of_study');
         const sectionNumber = urlParams.get('section_number');
-
+        showSpinner();
         fetch('/hod_downloadsubjectwisereport/', { 
             method: 'POST',
             headers: {
@@ -420,14 +437,18 @@
             })
         })
         .then(response => {
+            hideSpinner();
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
+                hideSpinner();
             }
+            
             const contentDisposition = response.headers.get('Content-Disposition');
                 const filename = contentDisposition.split('filename=')[1].replace(/['"]/g, ''); 
                 return response.blob().then(blob => ({ blob, filename }));
         })
         .then(({ blob, filename }) => {
+            hideSpinner();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
@@ -441,6 +462,7 @@
         .catch(error => {
             console.error('Error downloading report:', error);
             alert('An error occurred while downloading the report.');
+            hideSpinner();
         });
     }
     function getCookie(name) {

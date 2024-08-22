@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MVGR(A) Feedback Portal</title>
     <link rel="stylesheet" href="{% static '/css/styles.css' %}">
-    <link rel="stylesheet" href="{% static '/js/scripts.js' %}">
+    <script src="{% static 'js/scripts.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/college_logo.png' %}"> 
     <link
     href="https://unpkg.com/aos@2.3.1/dist/aos.css"
@@ -147,6 +148,9 @@
                 <img src="" alt="Department Logo"> 
             </a>
         </div>
+    </div>
+    <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+        <div class="spinner"></div>
     </div>
     <div>
         <marquee id="text_scroll" behavior="scroll" direction="right to left" style="padding:5px 0 5px 0px;font-weight: 100;background-color:ghostwhite;color: #000;">Welcome to Student Feedback Portal...</marquee>
@@ -312,7 +316,7 @@
         }
 
         const studentId = "{{ register_number }}";
-
+        showSpinner();
         fetch('/changepassword/', { 
             method: 'POST',
             headers: {
@@ -326,22 +330,28 @@
             })
         })
         .then(response => {
+            hideSpinner();
             if (!response.ok) {
                 throw new Error('Network response was not OK');
+                hideSpinner();
             }
             return response.json();
         })
         .then(data => {
+            hideSpinner();
             if (data.success) {
                 alert('Password changed successfully!');
+                hideSpinner();
                 closePasswordOverlay(); 
             } else {
-                alert('Error changing password: ' + data.message); 
+                alert('Error changing password: ' + data.message);
+                hideSpinner(); 
             }
         })
         .catch(error => {
             console.log('Error changing password:', error);
             alert('An error occurred while changing the password.'); 
+            hideSpinner();
         });
     }
 
@@ -388,8 +398,9 @@
     function getsubjects() {
     const studentId = "{{ register_number }}";
     const subjectsList = document.getElementById('subjects-list');
-
+    showSpinner();
     fetch('/getsubjectsatstudent/', {
+        
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -400,15 +411,19 @@
         })
             })
             .then(response => {
+                hideSpinner();
                 if (!response.ok) {
                     throw new Error('Network response was not OK');
+                    hideSpinner();
                 }
                 return response.json();
             })
             .then(data => {
+                hideSpinner();
                 subjectsList.innerHTML = ''; 
 
                 if (data.success) {
+                    hideSpinner();
                     const subjects = data.subjects;
                     for (const subject of subjects) {
                         const subjectContainer = document.createElement('div');
@@ -446,13 +461,16 @@
                         subjectsList.appendChild(subjectContainer);
                     }
                 } else {
+
                     console.error("Error fetching subjects:", data.error);
                     subjectsList.innerHTML = `<p class="error-message">${data.error}</p>`; 
+                    hideSpinner();
                 }
             })
             .catch(error => {
                 console.error('Fetch error:', error);
                 subjectsList.innerHTML = '<p class="error-message">An error occurred while fetching subjects.</p>'; 
+                hideSpinner();
             });
         }
     

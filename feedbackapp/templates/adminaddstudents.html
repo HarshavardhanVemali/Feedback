@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminstudent.css' %}">
     <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
+    <script src="{% static 'js/scripts.js' %}"></script>
     <title>MVGR(A) ADMIN</title>
     <link
     href="https://unpkg.com/aos@2.3.1/dist/aos.css"
@@ -31,7 +32,7 @@
             <ul>
                 <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
                 <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
-                <li><a class="nav-link" href="{% url 'adminhod' %}"><span>HOD</span></a></li>
+                <li><a class="nav-link" href="{% url 'adminhod' %}"><span>Hod</span></a></li>
                 <li><a class="nav-link active" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
                 <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
             </ul>
@@ -394,6 +395,7 @@
             `;
         }
         function getDepartments() {
+            showSpinner();
             fetch('/getdepartments/', {
                 method: 'POST',
                 headers: {
@@ -402,6 +404,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 const departmentSelect = document.getElementById('facultydepartment');
                 data.forEach(department => {    
                     const option = document.createElement('option');
@@ -413,12 +416,14 @@
             })
             .catch(error => {
                 console.error('Error fetching departments:', error);
+                hideSpinner();
             });
         }
         function getFaculty() {
             departmentCode = document.getElementById('facultydepartment').value;
             const facultySelect = document.getElementById('faculty');
             facultySelect.innerHTML = '<option value="" disabled selected>Faculty</option>'; 
+            showSpinner();
             fetch('/getfaculty/', {
                 method: 'POST',
                 headers: {
@@ -429,6 +434,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if(data.faculty && data.faculty.length > 0) {
                     data.faculty.forEach(faculty => {
                         const option = document.createElement('option');
@@ -445,9 +451,11 @@
             })
             .catch(error => {
                 console.error('Error fetching faculty:', error);
+                hideSpinner();
             });
         }
         function getStudents() {
+            showSpinner();
             fetch('/getstudents/', {
                 method: 'POST',
                 headers: {
@@ -462,6 +470,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 const studentTableBody = document.querySelector('#studentstable tbody');
                 studentTableBody.innerHTML = ''; 
 
@@ -498,13 +507,16 @@
                     const row = document.createElement('tr');
                     row.innerHTML = '<td colspan="9">No students found.</td>';
                     studentTableBody.appendChild(row);
+                    hideSpinner();
                 }
             })
             .catch(error => {
                 console.error('Error fetching students:', error);
+                hideSpinner();
             });
         }
         function resetpassword(studentId){
+            showSpinner();
             fetch('/resetpassword/', {
                 method: 'POST',
                 headers: {
@@ -516,14 +528,18 @@
                 })
             }).then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if (data.success) {
                     alert('Password reset successful.');
+                    hideSpinner();
                 } else {
                     alert('Failed to reset password: ', data.message);
+                    hideSpinner();
                 }
             })
             .catch(error => {
                 console.log('Error in changing password: ', error);
+                hideSpinner();
             });
         }
 
@@ -566,7 +582,7 @@
             const branchCode = urlParams.get('branch_code');
             const yearNumber = urlParams.get('year');
             const sectionNumber = urlParams.get('section_number');
-
+            showSpinner();
             fetch('/changequestionsforthesection/', {
                 method: 'POST',
                 headers: {
@@ -582,15 +598,20 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if (data.success) {
+                    
                     alert("Exam questions updated for this section.");
+                    hideSpinner();
                 } else {
                     alert("Error updating exam questions: " + data.error);
+                     hideSpinner();
                 }
             })
             .catch(error => {
                 console.error('Error updating exam questions:', error);
                 alert('An error occurred while updating exam questions.');
+                hideSpinner();
             });
         }
         function activatefeedback() {
@@ -603,6 +624,7 @@
             const branchCode = urlParams.get('branch_code');
             const yearNumber = urlParams.get('year');
             const sectionNumber = urlParams.get('section_number');
+            showSpinner();
             fetch('/activatefeedback/', {
                 method: 'POST',
                 headers: {
@@ -619,22 +641,28 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if (data.success) {
                     alert(data.message);
                     getsubjects(); 
+                    hideSpinner();
                 } else {
                     alert(data.error);
+                    hideSpinner();
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred while processing the request.');
+                hideSpinner();
             });
             } else {
             alert("Please select an action.");
+             hideSpinner();
             }
         }
         function getsubjects(){
+            showSpinner();
             fetch('/getsubjects/', {
                 method: 'POST',
                 headers: {
@@ -648,6 +676,7 @@
                     })
             }).then(response => response.json())
             .then(data => {
+                hideSpinner();
                 const subjectTableBody = document.querySelector('#subjectstable tbody');
                 subjectTableBody.innerHTML = ''; 
                 const activeSubjectsDiv = document.querySelector('.getactivesubjects');
@@ -673,6 +702,7 @@
                         subjectTableBody.appendChild(row);
                     });
                 } else {
+                    hideSpinner();
                     const row = document.createElement('tr');
                     row.innerHTML = '<td colspan="8">No subjects found.</td>';
                     subjectTableBody.appendChild(row);
@@ -680,7 +710,9 @@
                 activeSubjectsDiv.innerHTML = ''; 
 
                 if (data.subjects && data.subjects.length > 0) {
+                    hideSpinner();
                     data.subjects.forEach(subject => {
+                        
                         const subjectDiv = document.createElement('div'); 
                         subjectDiv.classList.add('subject-container'); 
                         subjectDiv.innerHTML=`
@@ -699,11 +731,13 @@
                         activeSubjectsDiv.appendChild(subjectDiv);
                     });
                 } else {
+                    hideSpinner();
                     activeSubjectsDiv.textContent = 'No active subjects found.';
                 }
             })
             .catch(error => {
                 console.error('Error fetching subjects:', error);
+                hideSpinner();
             });
         }
         function savesubjectchanges(subjectCode) {
@@ -719,7 +753,7 @@
             const branchCode = urlParams.get('branch_code');
             const yearNumber = urlParams.get('year');
             const sectionNumber = urlParams.get('section_number');
-
+            showSpinner();
             fetch('/savesubjectchanges/', {
                 method: 'POST',
                 headers: {
@@ -735,14 +769,18 @@
                 })
             })
             .then(response => {
+                hideSpinner();
                 if (response.ok) {
                     alert('Changes saved successfully');
                     getsubjects();
+                    hideSpinner();
                 } else {
                     alert('Failed to save subject changes');
+                    hideSpinner();
                 }
             })
             .catch(error => console.error('Error:', error));
+            hideSpinner();
         }
 
         function deletesubject(subjectCode) {
@@ -751,7 +789,7 @@
             const branchCode = urlParams.get('branch_code');
             const yearNumber = urlParams.get('year');
             const sectionNumber = urlParams.get('section_number');
-
+            showSpinner();
             fetch('/deletesubject/', {
                 method: 'POST',
                 headers: {
@@ -766,14 +804,21 @@
                 })
             })
             .then(response => {
+                hideSpinner();
                 if (response.ok) {
                     alert('Deleted Successfully.');
                     getsubjects();
+                    hideSpinner();
                 } else {
                     alert('Failed to delete Subject.');
+                    hideSpinner();
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error =>{ 
+                console.error('Error:', error);
+                hideSpinner();
+            });
+            
         }
         document.getElementById('addsingleusersform').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -855,6 +900,7 @@
             formData.append('branch_code', branchCode);
             formData.append('year_number',yearNumber);
             formData.append('section_number',sectionNumber);
+            showSpinner();
             fetch(form.action, {
                 method: form.method,
                 headers: {
@@ -864,18 +910,22 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if (data.success) {
                     alert('Subject added successfully.');
                     form.reset();
                     getsubjects();
+                    hideSpinner();
                 }
                 else{
-                    alert('Failes to add Subject:',error)
+                    alert('Failes to add Subject:',error);
+                    hideSpinner();
                 }
             })
             .catch(error => {
                 console.error('Error adding Subject:', error);
                 alert('Error adding subject. Please try again later.',error);
+                hideSpinner();
             });
         });
         function savestudentchanges(studentId) {
@@ -886,6 +936,7 @@
                 getStudents();
                 return;
             }
+            showSpinner();
             fetch('/savestudentchanges/', {
                 method: 'POST',
                 headers: {
@@ -895,16 +946,23 @@
                 body: JSON.stringify({ student_id: studentId,student_name:studentName})
             })
             .then(response => {
+                hideSpinner();
                 if (response.ok) {
                     alert('Changes saved successfully');
                     getStudents();
+                    hideSpinner();
                 } else {
                     alert('Failed to save student changes:',error);
+                    hideSpinner();
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                hideSpinner();
+            });
         }
         function deletestudent(studentId){
+            showSpinner();
             fetch('/deletestudent/',{
                 method:'POST',
                 header:{
@@ -913,15 +971,21 @@
                 },
                 body:JSON.stringify({student_id:studentId})
             }).then(response => {
+                hideSpinner();
                 if(response.ok){
                     alert('Deleted Successfully.');
                     getStudents();
+                    hideSpinner();
                 }
                 else{
                     alret('Failed to delete Student.');
+                    hideSpinner();
                 }
             })
-            .catch(error => console.error('Error:',error))
+            .catch(error => {
+                console.error('Error:',error);
+                hideSpinner();
+            })
         }
         document.getElementById('downloadoverallreportform').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -932,7 +996,7 @@
             const branchCode = urlParams.get('branch_code');
             const yearNumber = urlParams.get('year');
             const sectionNumber = urlParams.get('section_number');
-
+            showSpinner();
             fetch('/downloadoverallreport/', {
                 method: 'POST',
                 headers: {
@@ -947,14 +1011,19 @@
                 })
             })
             .then(response => {
+                hideSpinner();
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
+                    hideSpinner();
                 }
+                hideSpinner();
                 const contentDisposition = response.headers.get('Content-Disposition');
                 const filename = contentDisposition.split('filename=')[1].replace(/['"]/g, ''); 
                 return response.blob().then(blob => ({ blob, filename }));
+                
             })
             .then(({ blob, filename }) => { 
+                hideSpinner();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
@@ -968,6 +1037,7 @@
             .catch(error => {
                 console.error('Error downloading report:', error);
                 alert('An error occurred while downloading the report.');
+                hideSpinner();
             });
         });
         function showSpinner() {

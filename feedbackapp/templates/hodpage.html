@@ -7,7 +7,9 @@
     <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminfaculty.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminstudent.css' %}">
-    <title>MVGR(A) ADMIN</title>
+    <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
+    <script src="{% static 'js/scripts.js' %}"></script>
+    <title>MVGR(A) Feedback HOD</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
 </head>
 <style>
@@ -33,9 +35,12 @@
     </div>
 </header>
 <main>
+    <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+        <div class="spinner"></div>
+    </div>
     <div class="subnav">
-        <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
-            <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
+        <div class="logoutbutton" onclick="window.location.href='{% url 'hodlogout' %}'">
+            <button id="logout-button" onclick="window.location.href='{% url 'hodlogout' %}'">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                     <polyline points="16 17 21 12 16 7" />
@@ -78,6 +83,7 @@
         window.location.href = `/hodbranches/?year=${yearNumber}&faculty_id=${facultyId}`;
     }
      function getyears() {
+        showSpinner();
          fetch('/hodgetyears/', {
              method: 'POST',
              headers: {
@@ -87,12 +93,15 @@
          })
          .then(response => response.json())
          .then(data => {
+            hideSpinner();
              const yearsContainer = document.getElementById('years');
              yearsContainer.innerHTML = ''; 
 
              if (data.length === 0) {
                  yearsContainer.innerHTML = '<p>No Years found.</p>';
+                 hideSpinner();
              } else {
+                hideSpinner();
                  data.forEach(year => {
                      const yearDiv = document.createElement('div');
                      yearDiv.className = 'year';
@@ -114,6 +123,7 @@
          })
          .catch(error => {
              console.error('Error fetching years:', error);
+             hideSpinner();
          });
      }
     document.addEventListener('DOMContentLoaded', () => {

@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MVGR(A) Feedback Portal</title>
     <link rel="stylesheet" href="{% static '/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
+    <script src="{% static 'js/scripts.js' %}"></script>
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/college_logo.png' %}"> 
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"/>
     <style>
@@ -115,6 +117,9 @@
             </a>
         </div>
     </div>
+    <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+        <div class="spinner"></div>
+    </div>
     {% if faculty_name %}
     <div class="subnavbar">
         <div class="headingtext">
@@ -192,6 +197,7 @@
         }
         let register_number = "{{register_number}}";
         function getsubjectsoffaculty() {
+            showSpinner();
             fetch('/getsubjectsoffaculty/', {
                 method: 'GET',
                 headers: {
@@ -201,6 +207,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
+                    hideSpinner();
                     const subjectsContainer = document.getElementById('subjects-container');
                     data.subjects.forEach(subject => {
                         const subjectItem = document.createElement('li');
@@ -227,7 +234,8 @@
                     });
                 })
                 .catch(error => {
-                    console.log('error in fetching subjects', error)
+                    console.log('error in fetching subjects', error);
+                    hideSpinner();
                 });
         }
         let isProfileOpen = false;

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminstudent.css' %}">
     <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
+    <script src="{% static 'js/scripts.js' %}"></script>
     <title>MVGR(A) ADMIN</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/college_logo.png' %}"> 
 </head>
@@ -27,7 +28,7 @@
             <ul>
                 <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
                 <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
-                <li><a class="nav-link" href="{% url 'adminhod' %}"><span>HOD</span></a></li>
+                <li><a class="nav-link" href="{% url 'adminhod' %}"><span>Hod</span></a></li>
                 <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
                 <li><a class="nav-link active" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
             </ul>
@@ -174,6 +175,7 @@
             });
         }
         function getquestions(ExamCode) {
+            showSpinner();
             fetch('/getquestions/', {
                 method: 'POST',
                 headers: {
@@ -186,14 +188,17 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if (data.success) {
                 displayQuestions(data.questions);
                 } else {
+                hideSpinner();
                 const questionsDiv = document.getElementById('questions');
                 questionsDiv.innerHTML = `<p>Error: ${data.error}</p>`;
                 }
             })
             .catch(error => {
+                hideSpinner();
                 console.error('Error fetching questions:', error);
             });
         }
@@ -311,8 +316,8 @@
                 question_text: questionText,
                 options: options
             };
-
-            fetch('/savequestions/', {
+            showSpinner();
+            fetch('/savequestions/', {    
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -322,14 +327,17 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if (data.success) {
                     alert(data.message); 
                     getquestions(ExamCode); 
                 } else {
+                    hideSpinner();
                     alert('Failed to update question: ' + data.error); 
                 }
             })
             .catch(error => {
+                hideSpinner();
                 console.error('Error updating question:', error);
                 alert('Error updating question. Please try again later.');
             });
@@ -354,7 +362,7 @@
                 question_text: formData.get('question'),
                 options: optionsData
             };
-
+            showSpinner();
             fetch('/addquestion/', {
                 method: 'POST',
                 headers: {
@@ -365,27 +373,25 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideSpinner();
                 if (data.success) {
                     alert('Question added successfully.');
                     form.reset(); 
                     hideAddForms();
                     getquestions(ExamCode); 
+                    hideSpinner();
                 } else {
+                    hideSpinner();
                     alert('Failed to add question: ' + data.error); 
                 }
             })
             .catch(error => {
+                hideSpinner();
                 console.error('Error adding question:', error);
                 alert('Error adding question. Please try again later.');
             });
         });
-        function showSpinner() {
-            document.getElementById('loading-spinner').style.display = 'flex';
-        }
-
-        function hideSpinner() {
-            document.getElementById('loading-spinner').style.display = 'none';
-        }
+        
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {

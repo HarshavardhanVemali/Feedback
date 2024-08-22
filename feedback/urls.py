@@ -86,6 +86,8 @@ urlpatterns = [
     path('facultypage/',views.facultypage,name='facultypage'),
     path('getsubjectsoffaculty/',views.get_subjects_of_faculty,name='getsubjectsoffaculty'),
     path('facultyfeedbackofsubject/',views.facultyfeedbackofsubject,name='facultyfeedbackofsubject'),
+    path('faculty_get_question_wise_analysis/',views.faculty_get_question_wise_analysis,name='faculty_get_question_wise_analysis'),
+    path('faculty_get_student_comments/',views.faculty_get_student_comments,name='faculty_get_student_comments'),
     path('get_overall_rating/',views.get_overall_rating,name='get_overall_rating'),
     path('facultylogout',views.faculty_logout_view,name='facultylogout'),
     path('hodlogin/',views.hodlogin,name='hodlogin'),
@@ -111,5 +113,6 @@ urlpatterns = [
     path('hodfeedbackofsubject/hod_get_question_wise_analysis/', views.hod_get_question_wise_analysis, name='hod_get_question_wise_analysis'),
     path('hod_downloadsubjectwisereport/',views.hod_downloadsubjectwisereport,name='hod_downloadsubjectwisereport'),
     path('hod_downloadoverallreport/', views.hod_downloadoverallreport, name='hod_downloadoverallreport'),
+    path('hodlogout',views.hod_logout_view,name='hodlogout'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

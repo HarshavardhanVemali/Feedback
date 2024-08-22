@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminfaculty.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminbranches.css' %}">
+    <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
+    <script src="{% static 'js/scripts.js' %}"></script>
     <title>MVGR(A) ADMIN</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
 </head>
@@ -27,7 +29,7 @@
             <ul>
                 <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
                 <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
-                <li><a class="nav-link" href="{% url 'adminhod' %}"><span>HOD</span></a></li>
+                <li><a class="nav-link" href="{% url 'adminhod' %}"><span>Hod</span></a></li>
                 <li><a class="nav-link active" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
                 <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
 
@@ -35,6 +37,9 @@
         </div>
     </header>
     <main>
+        <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+            <div class="spinner"></div>
+        </div>
         <div class="breadcrumb">
             <a href="{% url 'adminstudents' %}">/Students</a> / 
             {% if year_number%}
@@ -154,6 +159,7 @@
         editbranchDiv.style.display = editbranchDiv.style.display === 'block' ? 'none' : 'block';
     }
     function getdepartments() {
+        
         fetch('/getdepartments/', {
             method: 'POST',
             headers: {
@@ -179,7 +185,8 @@
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
-        formData.append('year_number',yearNumber)
+        formData.append('year_number',yearNumber);
+        showSpinner();
         fetch(form.action, {
             method: form.method,
             headers: {
@@ -189,22 +196,27 @@
         })
         .then(response => response.json())
         .then(data => {
+            hideSpinner();
             if (data.success) {
                 alert('Branch created successfully.');
                 form.reset();
                 document.querySelector('.overlay').classList.remove('active');
                 getdepartments();
                 getbranches(yearNumber);
+                hideSpinner();
             } else {
                 alert('Failed to add Branch: ' + data.error);
+                hideSpinner();
             }
         })
         .catch(error => {
+            hideSpinner();
             console.error('Error adding Branch:', error);
             alert('Error adding Branch Please try again later.');
         });
     });
     function getbranches(yearNumber) {
+        showSpinner();
         fetch('/getbranches/', {
             method: 'POST',
             headers: {
@@ -216,6 +228,7 @@
             })
         }).then(response => response.json())
             .then(data => {
+                hideSpinner();
                 const branchesContainer = document.getElementById('branches');
                 branchesContainer.innerHTML = ''; 
                 if(data.length===0){
@@ -243,6 +256,7 @@
         })
         .catch(error => {
                 console.error('Error fetching branches:', error);
+                hideSpinner();
         });
     }
     function redirectToSectionPage(branchCode, branchName) {
@@ -291,6 +305,7 @@
             getbranches();
             return;
         }
+        showSpinner();
         fetch('/savebranchchanges/', {
             method: 'POST',
             headers: {
@@ -310,20 +325,25 @@
             return response.json();
         })
         .then(data => {
+            hideSpinner();
             if(data.success){
                 alert('Changes saved successfully');
                 getbranches(yearNumber);
+                hideSpinner();
             }
             else{
                 alert('Unable to save changes.');
+                hideSpinner();
             }
         })
         .catch(error => {
             console.error('Error saving changes:', error);
             alert('Error saving changes. Please try again later.');
+            hideSpinner();
         });
     }
     function deleteBranch(branchCode){
+        showSpinner();
         fetch('/deletebranch/', {
             method: 'POST',
             headers: {
@@ -342,17 +362,21 @@
             return response.json();
         })
         .then(data=>{
+            hideSpinner();
             if(data.success){
                 alert('Deleted Successfully.');
                 getbranches(yearNumber);
+                hideSpinner();
             }
             else{
                 alert('Failed to delete.');
+                hideSpinner();
             }
         })
         .catch(error=>{
             console.error('Error saving changes:', error);
             alert('Error saving changes. Please try again later.');
+            hideSpinner();
         });
     }
     let yearNumber;

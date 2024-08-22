@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{% static 'css/adminpage.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminfaculty.css' %}">
     <link rel="stylesheet" href="{% static 'css/adminbranches.css' %}">
+    <link rel="stylesheet" href="{% static 'css/loaderstyles.css' %}">
+    <script src="{% static 'js/scripts.js' %}"></script>
     <title>MVGR(A) ADMIN</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/static/images/college_logo.png">
 </head>
@@ -27,7 +29,7 @@
             <ul>
                 <li><a class="nav-link" href="{% url 'adminpage' %}"><span></span>Departments</a></li>
                 <li><a class="nav-link" href="{% url 'adminfaculty' %}"><span>Faculty</span></a></li>
-                <li><a class="nav-link active" href="{% url 'adminhod' %}"><span>HOD</span></a></li>
+                <li><a class="nav-link active" href="{% url 'adminhod' %}"><span>Hod</span></a></li>
                 <li><a class="nav-link" href="{% url 'adminstudents' %}"><span></span>Students</a></li>
                 <li><a class="nav-link" href="{% url 'adminfeedback' %}"><span>Feedback</span></a></li>
 
@@ -35,7 +37,9 @@
         </div>
     </header>
     <main>
-
+        <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+            <div class="spinner"></div>
+        </div>
         <div class="subnav">
             <div class="addbranches">
                 <button id="addbranchesbutton" onclick="showAddBrachesForm()">
@@ -62,7 +66,7 @@
                         <line x1="15" y1="9" x2="9" y2="15" />
                         <line x1="9" y1="9" x2="15" y2="15" />
                     </svg>
-                    <form method="post" enctype="multipart/form-data" id="assignhodform" action="{% url 'assignhod' %}"> 
+                    <form method="post" id="assignhodform" action="{% url 'assignhod' %}"> 
                         {% csrf_token %}
                         <input type="hidden" name="form_type" value="assignhodform">
                         <div id="form-row">
@@ -113,31 +117,35 @@
             editHodDiv.style.display = 'block';
         }
     }
-    document.getElementById('assignhod').addEventListener('submit', function(event){
+    document.getElementById('assignhodform').addEventListener('submit', function(event) {
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
-        fetch('assignhod/', { 
-            method: form.method,
+        showSpinner();
+        fetch('/assignhod/', { 
+            method: 'POST',
             headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': getCookie('csrftoken') 
             },
-            body: formData
+            body: formData 
         })
         .then(response => response.json())
         .then(data => {
+            hideSpinner();
             if (data.success) {
-                alert("HOD assigned successfully.");
-                form.reset();
-                hideAddBranchesForm(); 
-                getHod();
+            alert('HOD assigned successfully.');
+            getHod(); 
+            form.reset(); 
+            hideAddBranchesForm();
             } else {
-                alert('Failed to assign HOD: ' + data.error); 
+            alert('Failed to assign HOD: ' + data.error);
             }
         })
         .catch(error => {
-                console.error('Error fetching faculty:', error);
-            });
+            hideSpinner();
+            console.error('Error in assigning HOD:', error);
+            alert('Error in assigning HOD. Please try again later.');
+        });
     });
     document.addEventListener('DOMContentLoaded', () => {
         getHod(); 
@@ -198,6 +206,7 @@
             });
         }
        function getHod() {
+        showSpinner();
            fetch('/gethod/', { 
                method: 'GET',
                headers: {
@@ -206,15 +215,19 @@
            })
            .then(response => response.json())
            .then(data => {
+            hideSpinner();
                if (data.success) {
                    populateHodDisplay(data.hods); 
+                   hideSpinner();
                } else {
                    alert('Error fetching HOD data.');
+                   hideSpinner();
                }
            })
            .catch(error => {
                console.error('Error fetching HOD data:', error);
                alert('Error fetching HOD data. Please try again later.');
+               hideSpinner();
            });
        }
        function populateHodDisplay(hods) {
@@ -260,7 +273,7 @@
         hodContainer.appendChild(table); 
     }
     function deleteHod(departmentCode, facultyId) { 
-        console.log(facultyId,departmentCode);
+        showSpinner();
         fetch('/deletehod/', {
             method: 'POST',
             headers: {
@@ -274,32 +287,37 @@
         })
         .then(response => response.json())
         .then(data => {
+            hideSpinner();
             if (data.success) {
                 alert('HOD deleted successfully.'); 
                 getHod(); 
+                hideSpinner();
             } else {
                 alert('Error deleting HOD: ' + data.error);
+                hideSpinner();
+                
             }
         })
         .catch(error => {
             console.error('Error deleting HOD data:', error);
             alert('Error deleting HOD data. Please try again later.');
+            hideSpinner();
         });
     }
     function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
             }
+            return cookieValue;
         }
-        return cookieValue;
-    }
 
 </script>
 </html>
