@@ -106,8 +106,3 @@ express written permission of Vemali Harshavardhan.
 - **Website** https://harshavardhanvemali.netlify.app
 
 ---
-
-**Notes:**
-
-- **Replace the information with your project's specific details.**
-- **Consider adding a "Usage" section if your project has specific commands or functionalities.** 
