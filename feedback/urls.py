@@ -115,4 +115,3 @@ urlpatterns = [
     path('hod_downloadoverallreport/', views.hod_downloadoverallreport, name='hod_downloadoverallreport'),
     path('hodlogout',views.hod_logout_view,name='hodlogout'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

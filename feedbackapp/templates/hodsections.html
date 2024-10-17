@@ -143,7 +143,7 @@
     function updateBreadcrumbs(yearNumber, branchName,facultyId) {
         const breadcrumbContainer = document.querySelector('.breadcrumb');
         breadcrumbContainer.innerHTML = `
-            <a href="{% url 'hodpage' %}">/Year</a> /
+            <a href="{% url 'hodpage' %}">/Students</a> /
             <a href="/hodbranches/?year=${yearNumber}&faculty_id=${facultyId}">Year ${yearNumber}</a> /
             ${branchName ? `<span>${branchName} / </span>` : ''} 
         `;

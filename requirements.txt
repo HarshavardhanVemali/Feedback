@@ -48,3 +48,4 @@ webencodings==0.5.1
 whitenoise==6.7.0
 xhtml2pdf==0.2.16
 zopfli==0.2.3
+python-dotenv==1.0.1

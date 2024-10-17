@@ -73,10 +73,7 @@
                     <label for="departmentname">Department Name : </label>
                     <input type="text" name="departmentname" id="departmentname" placeholder="Department Name" required>
                 </div>
-                <div id="form-row">
-                    <label for="departmentcode">Department Code : </label>
-                    <input type="text" name="departmentcode" id="departmentcode" placeholder="Department Code" required>
-                </div>
+
                 <div id="form-row">
                     <label for="departmentimage">Department Logo : </label>
                     <input type="file" name="departmentimage" id="departmentimage">
@@ -94,7 +91,6 @@
                 <thead>
                     <tr>
                         <th>Department</th>
-                        <th>Code</th>
                         <th>Logo</th>
                         <th></th>
                         <th></th>
@@ -105,6 +101,8 @@
                 </tbody>
             </table>
         </div>
+    </div>
+    <div id="message-overlay">
     </div>
 </main>
 <script>
@@ -130,30 +128,39 @@ function getdepartments() {
         hideSpinner();
         const departmentTableBody = document.querySelector('#Departmenttable tbody');
         departmentTableBody.innerHTML = '';
-        data.forEach(department => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td contenteditable="true" style="max-width:150px;" id="department_name_${department.code}">${department.name}</td>
-                <td id="department_code_${department.code}">${department.code}</td>
-                <td>${department.logo ? `<img src="${department.logo}" alt="${department.name} Logo" height="50">` : 'N/A'}</td>
-                <td><button onclick="saveChanges('${department.code}')" class="save-button">
-                    
-                    Save</button></td>
-                <td>
-                    <button onclick="deleteDepartment('${department.code}')" class="delete-button">
-                        <svg style="margin-right: 3px;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="h-5 w-5 shrink-0">
-                            <path fill="currentColor" fill-rule="evenodd" d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1" clip-rule="evenodd"></path>
-                        </svg>
-                        Delete
-                    </button>
-                </td>
-            `;
-            departmentTableBody.appendChild(row);
-            const departmentNameCell = row.querySelector(`#department_name_${department.code}`);
-            departmentNameCell.addEventListener('input', () => {
-                department.name = departmentNameCell.textContent.trim();
+        if (data.length === 0) {
+            const noDepartmentRow = document.createElement('tr');
+            const noDepartmentCell = document.createElement('td');
+            noDepartmentCell.setAttribute('colspan', 4);
+            noDepartmentCell.textContent = 'No departments found.';
+            noDepartmentRow.appendChild(noDepartmentCell);
+            departmentTableBody.appendChild(noDepartmentRow);
+        }
+        else{
+            data.forEach(department => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td contenteditable="true" style="max-width:150px;" id="department_name_${department.code}">${department.name}</td>
+                    <td>${department.logo ? `<img src="${department.logo}" alt="${department.name} Logo" height="50">` : 'N/A'}</td>
+                    <td><button onclick="saveChanges('${department.code}')" class="save-button">
+                        
+                        Save</button></td>
+                    <td>
+                        <button onclick="deleteDepartment('${department.code}')" class="delete-button">
+                            <svg style="margin-right: 3px;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="h-5 w-5 shrink-0">
+                                <path fill="currentColor" fill-rule="evenodd" d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1" clip-rule="evenodd"></path>
+                            </svg>
+                            Delete
+                        </button>
+                    </td>
+                `;
+                departmentTableBody.appendChild(row);
+                const departmentNameCell = row.querySelector(`#department_name_${department.code}`);
+                departmentNameCell.addEventListener('input', () => {
+                    department.name = departmentNameCell.textContent.trim();
+                });
             });
-        });
+        }
     })
     .catch(error => {
         hideSpinner();
@@ -176,14 +183,12 @@ document.getElementById('adddepartmentform').addEventListener('submit', function
     .then(data => {
         hideSpinner();
         if (data.success) {
-            alert('Department added successfully.');
+            showMessage('Department added successfully.','success');
             form.reset();
             document.querySelector('.overlay').classList.remove('active');
             getdepartments();
-            hideSpinner();
         } else {
-            alert('Failed to add department: ' + data.error);
-            hideSpinner();
+            showMessage(data.error,'warning');
         }
     })
     .catch(error => {
@@ -196,7 +201,7 @@ function saveChanges(departmentCode) {
     const departmentNameElement = document.querySelector(`#department_name_${departmentCode}`);
     const departmentName = departmentNameElement.textContent.trim();
     if (departmentName === "") {
-        alert("Department name must be filled out");
+        showMessage('Department name must be filled.','warning');
         getdepartments();
         return;
     }
@@ -217,21 +222,18 @@ function saveChanges(departmentCode) {
         return response.json();
     })
     .then(data => {
-        hideSpinner();
         if(data.success){
-            alert('Changes saved successfully');
+            showMessage('Changes saved successfully','success');
             getdepartments();
-            hideSpinner();
         }
         else{
-            alert('Unable to save changes.');
-            hideSpinner();
+            showMessage(data.error,'error');
         }
     })
     .catch(error => {
         hideSpinner();
         console.error('Error saving changes:', error);
-        alert('Error saving changes. Please try again later.');
+        showMessage('Error while saving changes','error');
     });
 }
 function deleteDepartment(departmentCode){
@@ -252,21 +254,18 @@ function deleteDepartment(departmentCode){
         return response.json();
     })
     .then(data=>{
-        hideSpinner();
         if(data.success){
-            hideSpinner();
-            alert('Deleted Successfully.');
+            showMessage('Deleted Successfully.','delete');
             getdepartments();
         }
         else{
-            hideSpinner();
-            alert('Failed to delete.');
+            showMessage(data.error,'error');
         }
     })
     .catch(error=>{
         hideSpinner();
         console.error('Error saving changes:', error);
-        alert('Error saving changes. Please try again later.');
+        showMessage('An error occured','error');
     });
 }
 document.addEventListener('DOMContentLoaded', () => {

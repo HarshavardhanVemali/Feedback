@@ -100,6 +100,8 @@
         <div class="showquestions">
             <div id="questions"></div>
         </div>
+        <div id="message-overlay">
+        </div>
     </main>
     <script>
         let maximumoptions;
@@ -172,6 +174,7 @@
             })
             .catch(error => {
                 console.error('Error fetching Maxoptions:', error);
+                showMessage('An error occured.','warning');
             });
         }
         function getquestions(ExamCode) {
@@ -200,6 +203,7 @@
             .catch(error => {
                 hideSpinner();
                 console.error('Error fetching questions:', error);
+                showMessage('An error occured.','warning');
             });
         }
 
@@ -281,15 +285,18 @@
                 .then(response => {
                     hideSpinner();
                     if (response.ok) {
-                        alert('Deleted Successfully.');
+                        showMessage('Deleted successfully.','delete');
                         getquestions(ExamCode);
                     } else {
-                        alert('Failed to delete Question.');
+                        showMessage(data.error,'error');
                     }
                      
                 })
-                .catch(error => console.error('Error:', error));
-                hideSpinner();
+                .catch(error => {
+                    hideSpinner();
+                    console.error('Error:', error)
+                    showMessage('An error occured.','warning');
+                });
             }
         }
         function saveQuestion(questionIndex) {
@@ -329,17 +336,16 @@
             .then(data => {
                 hideSpinner();
                 if (data.success) {
-                    alert(data.message); 
+                    showMessage(data.message,'success');
                     getquestions(ExamCode); 
                 } else {
-                    hideSpinner();
-                    alert('Failed to update question: ' + data.error); 
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 hideSpinner();
                 console.error('Error updating question:', error);
-                alert('Error updating question. Please try again later.');
+                showMessage('An error occured.','warning');
             });
         }
         document.getElementById('addquestionsform').addEventListener('submit', function(event) {
@@ -375,20 +381,18 @@
             .then(data => {
                 hideSpinner();
                 if (data.success) {
-                    alert('Question added successfully.');
+                    showMessage('Question added successfully.','success');
                     form.reset(); 
                     hideAddForms();
                     getquestions(ExamCode); 
-                    hideSpinner();
                 } else {
-                    hideSpinner();
-                    alert('Failed to add question: ' + data.error); 
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 hideSpinner();
                 console.error('Error adding question:', error);
-                alert('Error adding question. Please try again later.');
+                showMessage('An error occured.','warning');
             });
         });
         

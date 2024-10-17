@@ -103,6 +103,8 @@
             <div class="analysis-content" id="question-analysis-mid2"></div>
             <div class="analysis-content" id="comments-analysis-mid2"></div>
         </div> 
+        <div id="message-overlay">
+        </div>
     </main>
 </body>
 <script>
@@ -137,10 +139,12 @@
         if (target === 'mid1') {
             mid1Content.style.display = 'block';
             mid2Content.style.display = 'none';
+            showAnalysis('student-analysis-mid1');
         } else if (target === 'mid2') {
             mid2Content.style.display = 'block';
             mid1Content.style.display = 'none';
-        } 
+            showAnalysis('student-analysis-mid2');
+        }
     }
 
     function showAnalysis(analysisId) { 
@@ -201,19 +205,16 @@
         .then(data => {
             hideSpinner();
             if (analysisType === 'student-analysis' && data.analysis_data) {
-                hideSpinner();
                 displayStudentAnalysis(data.analysis_data, midterm);
             } else if (analysisType === 'question-analysis' && data.analysis_data) {
-                hideSpinner();
                 displayQuestionAnalysis(data.analysis_data, midterm);
             } else {
-                alert(data.error || 'No analysis data found.');
-                hideSpinner();
+                showMessage(data.error,'warning');
             }
         })
         .catch(error => {
             console.error('Error fetching analysis data:', error);
-            alert('Error fetching analysis data.');
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     }
@@ -392,15 +393,13 @@
             hideSpinner();
             if (data.analysis_data) {
                 displayStudentComments(data.analysis_data, midterm);
-                hideSpinner();
             } else {
-                alert(data.error || 'No comments found.');
-                hideSpinner();
+                showMessage(data.error,'warning');
             }
         })
         .catch(error => {
             console.error('Error fetching comments data:', error);
-            alert('Error fetching comments data.');
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     }
@@ -416,15 +415,24 @@
         headerRow.insertCell().textContent = 'Student Name';
         headerRow.insertCell().textContent = 'Comment';
         const tbody = table.createTBody();
+        let untrimComments=0;
+        
         commentsData.forEach(comment => {
             if (comment.comment.trim() !== "") {
                 const row = tbody.insertRow();
                 row.insertCell().textContent = comment.student_id;
                 row.insertCell().textContent = comment.student_name;
-                row.insertCell().textContent = comment.comment; 
+                row.insertCell().textContent = comment.comment;
+                untrimComments++;
             }
         });
+        if (untrimComments === 0) {
+            const row = tbody.insertRow();
+            const cell = row.insertCell();
+            cell.textContent = 'No Comments.';
+            cell.colSpan = 3; 
 
+        } 
         commentsDiv.appendChild(table);
     }
     function downloadreport(midterm){
@@ -451,11 +459,10 @@
             })
         })
         .then(response => {
+            hideSpinner();
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
-                hideSpinner();
             }
-            hideSpinner();
             const contentDisposition = response.headers.get('Content-Disposition');
                 const filename = contentDisposition.split('filename=')[1].replace(/['"]/g, ''); 
                 return response.blob().then(blob => ({ blob, filename }));
@@ -474,7 +481,7 @@
         })
         .catch(error => {
             console.error('Error downloading report:', error);
-            alert('An error occurred while downloading the report.',error);
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     }

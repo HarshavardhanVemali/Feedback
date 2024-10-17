@@ -15,20 +15,24 @@ import os
 import parse
 import dj_database_url
 from django.core.wsgi import get_wsgi_application
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2n=ks6h*a185(uv)vjwo!f42mhj)$^@0w!^ms!we7q3jm=9os*'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-2n=ks6h*a185(uv)vjwo!f42mhj)$^@0w!^ms!we7q3jm=9os*')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG =True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -41,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'feedbackapp',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -62,8 +67,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            '/Users/harsha/Projects/feedback/templates',
-            '/Users/harsha/Projects/feedback/feedbackapp/templates',
+            BASE_DIR / 'templates',
+            BASE_DIR / 'feedbackapp' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -77,8 +82,15 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'feedback.wsgi.application'
+#WSGI_APPLICATION = 'feedback.wsgi.application'
+ASGI_APPLICATION = 'canteen.asgi.application'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
+}
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

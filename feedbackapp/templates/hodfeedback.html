@@ -62,6 +62,9 @@
             <div class="getactivesubjects">
                 </div>
         </div>
+        <div id="message-overlay">
+        </div>
+    </main>
     </main>
     <script>
         let branchCode;
@@ -120,7 +123,7 @@
                 })
                 .catch(error => {
                     console.error('Error downloading report:', error);
-                    alert('An error occurred while downloading the report.');
+                    showMessage('An error occured.','warning');
                     hideSpinner();
                 });
             });

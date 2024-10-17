@@ -83,10 +83,6 @@
                         <label for="sectionname">Section Name</label>
                         <input type="text" name="sectionname" id="sectionname" placeholder="Name" required>
                     </div>
-                    <div id="form-row">
-                        <label for="sectionnumber">Section Number</label>
-                        <input type="text" name="sectionnumber" id="sectionnumber" placeholder="Section Number" required>
-                    </div>
                     <div class="button-container"> 
                         <button type="submit" id="addsectionbutton">Add</button>
                     </div>
@@ -107,7 +103,6 @@
             <table id="edittable">
                 <thead>
                     <tr>
-                        <th>Section Number</th>
                         <th>Section Name</th>
                         <th></th> 
                         <th></th> 
@@ -130,6 +125,8 @@
         <div id="sections">
 
         </div>
+    </div>
+    <div id="message-overlay">
     </div>
 </main>
 <script>
@@ -191,7 +188,7 @@
                     sectionDiv.className = 'section';
                     sectionDiv.innerHTML = `
                         <div class="image-name-group">
-                            <span>${section.section_name} (${section.section_number})</span>
+                            <span>${section.section_name}</span>
                         </div>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 18l6-6-6-6" />
@@ -206,8 +203,10 @@
             }
         })
         .catch(error => {
-            console.error('Error fetching sections:', error);
             hideSpinner();
+            console.error('Error fetching sections:', error);
+            showMessage('An error occured.','warning');
+            
         });
     }
     
@@ -218,7 +217,6 @@
         data.forEach(section => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${section.section_number}</td>
                 <td contenteditable="true" id="section_name_${section.section_number}">${section.section_name}</td>
                 <td><button onclick="savesectionchanges('${section.section_number}',${branchCode})" class="save-button">
                     Save</button></td>
@@ -239,7 +237,7 @@
         const sectionNameElement = document.getElementById(`section_name_${sectionNumber}`);
         const sectionName=sectionNameElement.textContent.trim();
         if (sectionName === "") {
-            alert("Section name must be filled out");
+            showMessage('Section name must be filled.','warning');
             getSections(branchCode,yearNumber);
             return;
         }
@@ -258,16 +256,15 @@
         .then(response => {
             hideSpinner();
             if (response.ok) {
-                alert('Changes saved successfully');
+                showMessage('Changes saved successfully.','success');
                 getSections(branchCode,yearNumber);
-                hideSpinner();
             } else {
-                alert('Failed to save section changes');
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     }
@@ -284,17 +281,16 @@
         }).then(response => {
             hideSpinner();
             if(response.ok){
-                alert('Deleted Successfully.');
+                showMessage('Deleted successfully.','delete');
                 getSections(branchCode,yearNumber);
-                hideSpinner();
             }
             else{
-                alret('Failed to delete section.');
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error => {
             console.error('Error:',error);
+            showMessage('An error occured.','warning');
             hideSpinner();
             
         })
@@ -345,20 +341,18 @@
         .then(data => {
             hideSpinner();
             if (data.success) {
-                alert('Section added successfully.');
+                showMessage('Changes saved successfully.','success');
                 form.reset();
                 document.querySelector('.overlay').classList.remove('active');
                 getSections(branchCode,yearNumber);
-                hideSpinner();
             }
             else{
-                alert('Failes to add sections.');
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error => {
             console.error('Error adding section:', error);
-            alert('Error adding section. Please try again later.');
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     });

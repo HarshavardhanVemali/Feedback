@@ -93,6 +93,8 @@
                 
             </div>
         </div>
+        <div id="message-overlay">
+        </div>
     </main>
 </body>
 <script>
@@ -133,18 +135,18 @@
         .then(data => {
             hideSpinner();
             if (data.success) {
-            alert('HOD assigned successfully.');
+            showMessage('HOD assigned successfully.','success');
             getHod(); 
             form.reset(); 
             hideAddBranchesForm();
             } else {
-            alert('Failed to assign HOD: ' + data.error);
+                showMessage(data.error,'error');
             }
         })
         .catch(error => {
             hideSpinner();
             console.error('Error in assigning HOD:', error);
-            alert('Error in assigning HOD. Please try again later.');
+            showMessage('An error occured.','warning');
         });
     });
     document.addEventListener('DOMContentLoaded', () => {
@@ -161,6 +163,13 @@
             .then(response => response.json())
             .then(data => {
                 const departmentSelect = document.getElementById('facultydepartment');
+                departmentSelect.innerHTML='';
+                const option = document.createElement('option');
+                option.value = '';
+                option.text = 'Select Department';
+                option.disabled=true;
+                option.selected=true;
+                departmentSelect.add(option);
                 data.forEach(department => {    
                     const option = document.createElement('option');
                     option.value = department.code;
@@ -220,13 +229,13 @@
                    populateHodDisplay(data.hods); 
                    hideSpinner();
                } else {
-                   alert('Error fetching HOD data.');
+                showMessage('Error fetching HOD data.','warning');
                    hideSpinner();
                }
            })
            .catch(error => {
                console.error('Error fetching HOD data:', error);
-               alert('Error fetching HOD data. Please try again later.');
+               showMessage('An error occured.','warning');
                hideSpinner();
            });
        }
@@ -289,18 +298,15 @@
         .then(data => {
             hideSpinner();
             if (data.success) {
-                alert('HOD deleted successfully.'); 
+                showMessage('HOD deleted successfully.','delete');
                 getHod(); 
-                hideSpinner();
             } else {
-                alert('Error deleting HOD: ' + data.error);
-                hideSpinner();
-                
+                showMessage(data.error,'error');
             }
         })
         .catch(error => {
             console.error('Error deleting HOD data:', error);
-            alert('Error deleting HOD data. Please try again later.');
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     }

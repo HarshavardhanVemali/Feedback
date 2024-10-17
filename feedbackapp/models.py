@@ -27,8 +27,8 @@ class FailedLoginAttempts(models.Model):
         return f'{self.device_id} - Attempts: {self.attempts}'
 
 class Departments(models.Model):
-    department_code = models.CharField(max_length=50, unique=True)
-    department_name = models.CharField(max_length=250)
+    department_code = models.AutoField(primary_key=True)
+    department_name = models.CharField(max_length=250,unique=True)
     department_logo = models.ImageField(upload_to='department_logo/', blank=True, null=True)
     
     def __str__(self):

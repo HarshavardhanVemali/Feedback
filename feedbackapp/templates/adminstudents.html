@@ -125,6 +125,8 @@
 
         </div>
     </div>
+    <div id="message-overlay">
+    </div>
 </main>
 <script>
     function showAddyearForm() {
@@ -146,7 +148,7 @@
     function redirectToBranchesPage(yearNumber) {
         window.location.href = `/adminbranches/?year=${yearNumber}`; 
     }
-     function getyears() {
+    function getyears() {
         showSpinner();
          fetch('/getyears/', {
              method: 'POST',
@@ -228,7 +230,7 @@
         const newYearNumber = yearNumberSelect.value;
         const newacademicYear=academicYear.textContent.trim();
         if (yearName === "" || newYearNumber === "" || newacademicYear==="") {
-            alert("Year name and number and academic year must be filled out");
+            showMessage('Required missing fields.','warning');
             getyears();
             return;
         }
@@ -247,18 +249,18 @@
             }),
         })
         .then((response) => {
+            hideSpinner();
             if (response.ok) {
-                alert("Changes saved successfully");
+                showMessage('Changes saved successfully.','success');
                 getyears(); 
-                hideSpinner();
             } else {
-                alert("Failed to save year changes");
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch((error) => {
-            console.error("Error:", error);
             hideSpinner();
+            showMessage('An error occured.','warning');
+            console.error("Error:", error);
         });
     }
     document.addEventListener('DOMContentLoaded', () => {
@@ -284,18 +286,16 @@
         .then(data=>{
             hideSpinner();
             if(data.success){
-                alert('Deleted Successfully.');
+                showMessage('Deleted Successfully.','delete');
                 getyears();
-                hideSpinner();
             }
             else{
-                alert('Failed to delete.');
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error=>{
             console.error('Error saving changes:', error);
-            alert('Error saving changes. Please try again later.');
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     }
@@ -314,22 +314,21 @@
         })
         .then(response => response.json())
         .then(data => {
+            hideSpinner();
             if (data.success) {
-                alert('Year added successfully.');
+                showMessage('Year added successfully.','success');
                 form.reset();
                 document.querySelector('.overlay').classList.remove('active');
                 getyears();
-                hideSpinner();
             }
             else{
-                alert('Failes to add Year.');
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error => {
-            console.error('Error adding Year:', error);
-            alert('Error adding Year. Please try again later.');
             hideSpinner();
+            console.error('Error adding Year:', error);
+            showMessage('An error occured','warning');
         });
     });
 

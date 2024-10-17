@@ -26,6 +26,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.models import Permission
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import Permission, ContentType
+import os
 
 def admin_required(view_func):
     return user_passes_test(
@@ -114,14 +115,12 @@ def adddepartments(request):
     if request.method == 'POST':
         if request.POST.get('form_type') == 'adddepartmentsform':
             department_name = request.POST.get('departmentname')
-            department_code = request.POST.get('departmentcode')
             department_image = request.FILES.get('departmentimage')
             try:
-                check_department=Departments.objects.filter(department_code=department_code)
+                check_department=Departments.objects.filter(department_name=department_name)
                 if check_department:
-                    return JsonResponse({'success': False, 'error': f'Department with id {department_code} already exists'})
+                    return JsonResponse({'success': False, 'error': f'Department {department_name} already exists'})
                 department = Departments.objects.create(
-                    department_code=department_code,
                     department_name=department_name,
                     department_logo=department_image
                 )
@@ -168,6 +167,13 @@ def deletedepartment(request):
         data=json.loads(request.body)
         department_code=data.get('department_code')
         current_department=Departments.objects.get(department_code=department_code)
+        if current_department.department_logo:
+            try:
+                image_path = current_department.department_logo.path 
+                if os.path.isfile(image_path):
+                    os.remove(image_path)
+            except Exception as e:
+                print(f"Error deleting image: {e}")
         current_department.delete()
         return JsonResponse({'success':True})
     except Departments.DoesNotExist:
@@ -271,8 +277,15 @@ def deletefaculty(request):
     try:
         data=json.loads(request.body)
         facultyid = data.get('faculty_id')
-        current_faculty = Faculty.objects.get(faculty_id=facultyid)
+        current_faculty = Faculty.objects.get(faculty_id=facultyid)      
         if current_faculty:
+            if current_faculty.faculty_image:
+                try:
+                    image_path = current_faculty.faculty_image.path 
+                    if os.path.isfile(image_path):
+                        os.remove(image_path)
+                except Exception as e:
+                    print(f"Error deleting image: {e}")
             current_faculty.delete()
             return JsonResponse({'success':True})
     except Departments.DoesNotExist:
@@ -424,6 +437,8 @@ def get_branches(request):
             return JsonResponse({'success': False, 'error': 'Year number and department code are required.'})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+    
+
 @admin_required
 @require_POST
 def savebranchchanges(request):
@@ -468,19 +483,18 @@ def addsections(request):
     if request.method == 'POST':
         if request.POST.get('form_type') == 'addsectionsform':
             section_name = request.POST.get('sectionname')
-            section_number = request.POST.get('sectionnumber')
             branch_code = request.POST.get('branch_code')
             year_number = request.POST.get('year_number')
-            if not (section_name and section_number and branch_code and year_number):
+            if not (section_name and branch_code and year_number):
                 return JsonResponse({'success': False, 'error': 'Missing required fields'}, status=400)
             try:
                 branch = Branches.objects.get(branch_code=branch_code, studying_year__studying_year=year_number)
                 studying_year = StudyingYear.objects.get(studying_year=year_number)
-                if Section.objects.filter(section_number=section_number, branch=branch).exists():
+                if Section.objects.filter(section_number=section_name, branch=branch).exists():
                     return JsonResponse({'success': False, 'error': 'Section already exists in this branch.'})
                 Section.objects.create(
                     section_name=section_name,
-                    section_number=section_number,
+                    section_number=section_name,
                     studying_year=studying_year,
                     branch=branch,
                 )
@@ -543,6 +557,7 @@ def savesectionchanges(request):
         )
 
         current_section.section_name = section_name
+        current_section.section_number=section_name
         current_section.save()
         return JsonResponse({'success': True})
 
@@ -723,7 +738,7 @@ def savestudentchanges(request):
 
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
-    except Section.DoesNotExist:
+    except Student.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'No Student found.'}, status=404)
 
 @admin_required
@@ -738,7 +753,7 @@ def deletestudent(request):
         )
         student.delete()
         return JsonResponse({'success': True})
-    except Section.DoesNotExist:
+    except Student.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Student not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
@@ -751,7 +766,7 @@ def resetpassword(request):
         data = json.loads(request.body)
         student_id = data.get('student_id')
         if not student_id:
-            return JsonResponse({'success': False, 'message': 'Student ID is required.'})
+            return JsonResponse({'success': False, 'error': 'Student ID is required.'})
 
         student = Student.objects.filter(student_id=student_id).first()
         if student:
@@ -759,7 +774,7 @@ def resetpassword(request):
             student.save()
             return JsonResponse({'success': True})
         else:
-            return JsonResponse({'success': False, 'message': 'Student not found.'})
+            return JsonResponse({'success': False, 'error': 'Student not found.'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
             
@@ -1064,7 +1079,7 @@ def addsubject(request):
                     branch = Branches.objects.get(branch_code=branch_code, studying_year__studying_year=year_number)
                     section = Section.objects.get(branch=branch, section_number=section_number)
                     faculty = Faculty.objects.get(faculty_id=faculty_id)
-                    if faculty.department.department_code== faculty_department:
+                    if int(faculty.department.department_code)== int(faculty_department):
                         subject = Subject.objects.create(
                             subject_code=subjectcode,
                             subject_name=subjectname,
@@ -1502,7 +1517,7 @@ def downloadoverallreport(request):
                     'subject_code': subject.subject_code,
                     'subject_name': subject.subject_name,
                     'faculty_name': faculty_name.faculty_name,
-                    'average_rating': average_rating
+                    'average_rating': round(average_rating,2)
                 })
             if department.department_logo:
                 with open(department.department_logo.path, 'rb') as img_file:

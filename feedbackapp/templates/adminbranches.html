@@ -140,6 +140,8 @@
                 
             </div>
         </div>
+        <div id="message-overlay">
+        </div>
     </main>
 </body>
 <script>
@@ -198,21 +200,19 @@
         .then(data => {
             hideSpinner();
             if (data.success) {
-                alert('Branch created successfully.');
+                showMessage('Branch created successfully.','success');
                 form.reset();
                 document.querySelector('.overlay').classList.remove('active');
                 getdepartments();
                 getbranches(yearNumber);
-                hideSpinner();
             } else {
-                alert('Failed to add Branch: ' + data.error);
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error => {
             hideSpinner();
+            showMessage('An error occured.','warning');
             console.error('Error adding Branch:', error);
-            alert('Error adding Branch Please try again later.');
         });
     });
     function getbranches(yearNumber) {
@@ -301,7 +301,7 @@
         const branchNameElement = document.getElementById(`branch_name_${branchCode}`);
         const branchName = branchNameElement.textContent.trim();
         if (branchName === "") {
-            alert("Branch name must be filled out.");
+            showMessage('Branch name must be filled.','warning');
             getbranches();
             return;
         }
@@ -327,18 +327,17 @@
         .then(data => {
             hideSpinner();
             if(data.success){
-                alert('Changes saved successfully');
+                showMessage('Changes saved successfully.','success');
                 getbranches(yearNumber);
                 hideSpinner();
             }
             else{
-                alert('Unable to save changes.');
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error => {
             console.error('Error saving changes:', error);
-            alert('Error saving changes. Please try again later.');
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     }
@@ -364,18 +363,16 @@
         .then(data=>{
             hideSpinner();
             if(data.success){
-                alert('Deleted Successfully.');
+                showMessage('Deleted successfully.','delete');
                 getbranches(yearNumber);
-                hideSpinner();
             }
             else{
-                alert('Failed to delete.');
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error=>{
             console.error('Error saving changes:', error);
-            alert('Error saving changes. Please try again later.');
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     }

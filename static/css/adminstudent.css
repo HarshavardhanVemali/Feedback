@@ -81,7 +81,7 @@
     text-decoration: underline;
 }
 .form-row input[type="text"],
-.form-row input[type="number"],textarea{
+.form-row input[type="number"],textarea,select{
     width: 50%;
     padding: 8px;
     box-sizing: border-box;
@@ -200,7 +200,7 @@ width:400px;
     margin-left: 40px;
     margin-top: 10px;
 }
-#addsectionbutton,#addyearbutton,#addfeedbackbutton{
+#addsectionbutton,#addyearbutton,#addfeedbackbutton,#downloadfeedbackbtn{
     width: 100px;
     padding: 5px;
     height: 35px;
@@ -210,7 +210,7 @@ width:400px;
     border: none;
     cursor: pointer;
 }
-#addsectionbutton:hover,#addyearbutton:hover,#addfeedbackbutton:hover{
+#addsectionbutton:hover,#addyearbutton:hover,#addfeedbackbutton:hover,#downloadfeedbackbtn:hover{
     background-color: lightskyblue;
 }
 #editbutton {
@@ -303,7 +303,7 @@ width:400px;
 }
 .section:hover ,.year:hover,.feedback:hover{
     background: linear-gradient(to right, #fafafa, #eeeeee);
-    transform: scale(1.02); 
+    transform: scale(1.007); 
 }
 .section:hover,.year:hover{
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);

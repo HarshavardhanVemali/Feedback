@@ -146,7 +146,7 @@
                         </div>
                         <div class="form-row">
                             <label for="startingnumber">Starting Number</label>
-                            <input type="number" name="startingnumber" id="startingnumber" min="1" placeholder="Ex: 01" required>
+                            <input type="number" name="startingnumber" id="startingnumber" min="1" placeholder="Ex: 1" required>
                         </div>
                         <div class="form-row">
                             <label for="endingnumber">Ending Number</label>
@@ -309,6 +309,9 @@
 
             </div>
         </div>
+        <div id="message-overlay">
+        </div>
+
     </main>
     <script>
         function showAddsingleForm() {
@@ -507,7 +510,6 @@
                     const row = document.createElement('tr');
                     row.innerHTML = '<td colspan="9">No students found.</td>';
                     studentTableBody.appendChild(row);
-                    hideSpinner();
                 }
             })
             .catch(error => {
@@ -530,16 +532,15 @@
             .then(data => {
                 hideSpinner();
                 if (data.success) {
-                    alert('Password reset successful.');
-                    hideSpinner();
+                    showMessage('Password reset successful.','success');
                 } else {
-                    alert('Failed to reset password: ', data.message);
-                    hideSpinner();
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 console.log('Error in changing password: ', error);
                 hideSpinner();
+                showMessage('An error occured.','warning');
             });
         }
 
@@ -600,17 +601,14 @@
             .then(data => {
                 hideSpinner();
                 if (data.success) {
-                    
-                    alert("Exam questions updated for this section.");
-                    hideSpinner();
+                    showMessage('Exam questions updated.','success');
                 } else {
-                    alert("Error updating exam questions: " + data.error);
-                     hideSpinner();
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 console.error('Error updating exam questions:', error);
-                alert('An error occurred while updating exam questions.');
+                showMessage('An error occured.','warning');
                 hideSpinner();
             });
         }
@@ -643,21 +641,18 @@
             .then(data => {
                 hideSpinner();
                 if (data.success) {
-                    alert(data.message);
+                    showMessage(data.message,'success');
                     getsubjects(); 
-                    hideSpinner();
                 } else {
-                    alert(data.error);
-                    hideSpinner();
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while processing the request.');
-                hideSpinner();
+                showMessage('An error occured.','warning');
             });
             } else {
-            alert("Please select an action.");
+                showMessage('Select action.','warning');
              hideSpinner();
             }
         }
@@ -702,7 +697,6 @@
                         subjectTableBody.appendChild(row);
                     });
                 } else {
-                    hideSpinner();
                     const row = document.createElement('tr');
                     row.innerHTML = '<td colspan="8">No subjects found.</td>';
                     subjectTableBody.appendChild(row);
@@ -710,7 +704,6 @@
                 activeSubjectsDiv.innerHTML = ''; 
 
                 if (data.subjects && data.subjects.length > 0) {
-                    hideSpinner();
                     data.subjects.forEach(subject => {
                         
                         const subjectDiv = document.createElement('div'); 
@@ -731,7 +724,6 @@
                         activeSubjectsDiv.appendChild(subjectDiv);
                     });
                 } else {
-                    hideSpinner();
                     activeSubjectsDiv.textContent = 'No active subjects found.';
                 }
             })
@@ -744,7 +736,7 @@
             const subjectNameElement = document.getElementById(`student_name_${subjectCode}`);
             const subjectName = subjectNameElement.textContent.trim();
             if (subjectName === "") {
-                alert("Subject name must be filled out");
+                showMessage('Subject name required.','warning');
                 getsubjects();
                 return;
             }
@@ -771,16 +763,17 @@
             .then(response => {
                 hideSpinner();
                 if (response.ok) {
-                    alert('Changes saved successfully');
+                    showMessage('Changes saved successfully.','success');
                     getsubjects();
-                    hideSpinner();
                 } else {
-                    alert('Failed to save subject changes');
-                    hideSpinner();
+                    showMessage(data.error,'error');
                 }
             })
-            .catch(error => console.error('Error:', error));
-            hideSpinner();
+            .catch(error => {
+                hideSpinner();
+                console.error('Error:', error)
+                showMessage('An error occured.','warning');
+            });
         }
 
         function deletesubject(subjectCode) {
@@ -806,15 +799,14 @@
             .then(response => {
                 hideSpinner();
                 if (response.ok) {
-                    alert('Deleted Successfully.');
+                    showMessage('Deleted successfully.','delete');
                     getsubjects();
-                    hideSpinner();
                 } else {
-                    alert('Failed to delete Subject.');
-                    hideSpinner();
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error =>{ 
+                showMessage('An error occured.','warning');
                 console.error('Error:', error);
                 hideSpinner();
             });
@@ -839,7 +831,7 @@
             .then(data => {
                 hideSpinner();
                 if (data.success) {
-                    alert('Student added successfully.');
+                    showMessage('Student added successfully.','success');
                     form.reset();
                     document.getElementById('addmultipleuserform-container').classList.add('hidden');
                     document.getElementById('addsingleuserform-container').classList.add('hidden');
@@ -848,13 +840,13 @@
                     
                 }
                 else{
-                    alert('Failes to add students:',error)
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 hideSpinner();
                 console.error('Error adding students:', error);
-                alert('Error adding students. Please try again later.',error);
+                showMessage('An error occured.','warning');
             });
         });
         document.getElementById('addmultipleusersform').addEventListener('submit', function(event) {
@@ -876,7 +868,7 @@
             .then(data => {
                 hideSpinner();
                 if (data.success) {
-                    alert('Students added successfully.');
+                    showMessage('Students added successfully.','success');
                     form.reset();
                     document.getElementById('addmultipleuserform-container').classList.add('hidden');
                     document.getElementById('addsingleuserform-container').classList.add('hidden');
@@ -884,13 +876,13 @@
                     getStudents();
                 }
                 else{
-                    alert('Failes to add students:',error)
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 hideSpinner();
                 console.error('Error adding students:', error);
-                alert('Error adding students. Please try again later.',error);
+                showMessage('An error occured.','warning');
             });
         });
         document.getElementById('addsubjectform').addEventListener('submit', function(event) {
@@ -912,19 +904,17 @@
             .then(data => {
                 hideSpinner();
                 if (data.success) {
-                    alert('Subject added successfully.');
+                    showMessage('Subject added successfully.','success');
                     form.reset();
                     getsubjects();
-                    hideSpinner();
                 }
                 else{
-                    alert('Failes to add Subject:',error);
-                    hideSpinner();
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 console.error('Error adding Subject:', error);
-                alert('Error adding subject. Please try again later.',error);
+                showMessage('An error occured.','warning');
                 hideSpinner();
             });
         });
@@ -932,7 +922,7 @@
             const studentNameElement = document.getElementById(`student_name_${studentId}`);
             const studentName=studentNameElement.textContent.trim();
             if (studentName === "") {
-                alert("Student name must be filled out");
+                showMessage('Student name required.','warning');
                 getStudents();
                 return;
             }
@@ -946,19 +936,23 @@
                 body: JSON.stringify({ student_id: studentId,student_name:studentName})
             })
             .then(response => {
-                hideSpinner();
                 if (response.ok) {
-                    alert('Changes saved successfully');
-                    getStudents();
-                    hideSpinner();
+                    return response.json(); 
                 } else {
-                    alert('Failed to save student changes:',error);
-                    hideSpinner();
+                    return response.text().then(text => {
+                        throw new Error(text || 'An error occurred during deletion.'); 
+                    });
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
+            .then(data => {  
                 hideSpinner();
+                showMessage('Changes saved successfully.','success');
+                getStudents();
+            })
+            .catch(error => {
+                hideSpinner();
+                showMessage(error.message, 'error'); 
+                console.error('Error:', error); 
             });
         }
         function deletestudent(studentId){
@@ -971,21 +965,24 @@
                 },
                 body:JSON.stringify({student_id:studentId})
             }).then(response => {
+                if (response.ok) {
+                    return response.json(); 
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text || 'An error occurred during deletion.'); 
+                    });
+                }
+            })
+            .then(data => {  
                 hideSpinner();
-                if(response.ok){
-                    alert('Deleted Successfully.');
-                    getStudents();
-                    hideSpinner();
-                }
-                else{
-                    alret('Failed to delete Student.');
-                    hideSpinner();
-                }
+                showMessage('Deleted successfully.', 'delete'); 
+                getStudents();
             })
             .catch(error => {
-                console.error('Error:',error);
                 hideSpinner();
-            })
+                showMessage(error.message, 'error'); 
+                console.error('Error:', error); 
+            });
         }
         document.getElementById('downloadoverallreportform').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -1014,9 +1011,7 @@
                 hideSpinner();
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
-                    hideSpinner();
                 }
-                hideSpinner();
                 const contentDisposition = response.headers.get('Content-Disposition');
                 const filename = contentDisposition.split('filename=')[1].replace(/['"]/g, ''); 
                 return response.blob().then(blob => ({ blob, filename }));
@@ -1036,7 +1031,7 @@
             })
             .catch(error => {
                 console.error('Error downloading report:', error);
-                alert('An error occurred while downloading the report.');
+                showMessage('An error occured.','warning');
                 hideSpinner();
             });
         });

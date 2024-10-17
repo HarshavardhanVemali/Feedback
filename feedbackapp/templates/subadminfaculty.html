@@ -119,6 +119,8 @@
             </table>
         </div>
     </div>
+    <div id="message-overlay">
+    </div>
 </main>
 <script>
     function showAddFacultyForm() {
@@ -150,6 +152,7 @@
             const departmentImage=data.department_image;
             const departmentInformation=document.querySelector('.departmentinformation');
             const selectDepartment=document.getElementById('department');
+            selectDepartment.innerHTML='';
             const option = document.createElement('option');
                 option.value = departmentCode;
                 option.text = `${data.department_name}`;
@@ -210,20 +213,18 @@
         .then(data => {
             hideSpinner();
             if (data.success) {
-                alert('Faculty added successfully.');
+                showMessage('Faculty added successfully.','success');
                 form.reset();
                 document.querySelector('.overlay').classList.remove('active');
                 getfaculty();
-                hideSpinner();
             } else {
-                alert('Failed to add Faculty: ' + data.error);
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error => {
             hideSpinner();
             console.error('Error adding faculty:', error);
-            alert('Error adding faculty Please try again later.');
+            showMessage('An error occured.','warning');
         });
     });
     function redirectToFacultyPage(departmentCode) {
@@ -238,7 +239,7 @@
     const facultyNameElement = document.getElementById(`faculty_name_${facultyId}`);
     const FacultyName = facultyNameElement.textContent.trim();
     if (FacultyName === "") {
-        alert("Faculty name must be filled out");
+        showMessage('Faculty name must be filled','warning');
         getfaculty();
         return;
     }
@@ -259,19 +260,18 @@
         return response.json();
     })
     .then(data => {
+        hideSpinner();
         if(data.success){
-            alert('Changes saved successfully');
-            getfaculty();
-            hideSpinner();
+            showMessage('Changes saved successfully','success');
+            getfaculty();    
         }
         else{
-            alert('Unable to save changes.');
-            hideSpinner();
+            showMessage(data.error,'error');
         }
     })
     .catch(error => {
         console.error('Error saving changes:', error);
-        alert('Error saving changes. Please try again later.');
+        showMessage('An error occured.','warning');
         hideSpinner();
     });
     }
@@ -295,18 +295,16 @@
         .then(data=>{
             hideSpinner();
             if(data.success){
-                alert('Deleted Successfully.');
+                showMessage('Deleted Successfully.','delete')
                 getfaculty();
-                hideSpinner();
             }
             else{
-                alert('Failed to delete.');
-                hideSpinner();
+                showMessage(data.error,'error');
             }
         })
         .catch(error=>{
             console.error('Error saving changes:', error);
-            alert('Error saving changes. Please try again later.');
+            showMessage('An error occured.','warning');
             hideSpinner();
         });
     }

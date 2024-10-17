@@ -39,7 +39,7 @@
         <div class="spinner"></div>
     </div>
     <div class="subnav">
-        <div class="addbranches">
+        <div class="addbranches" style="display: flex;align-items: center;">
             <button id="addbranchesbutton" onclick="showfeedbackForm()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -47,6 +47,15 @@
                 </svg>
                 <span>Create Feedback</span>
             </button>
+            <div class="addbranches">
+                <button id="downloadfeedback" onclick="showDownloadFeedbackForm()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-file-arrow-down" viewBox="0 0 16 16">
+                        <path d="M8 5a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 9.293V5.5A.5.5 0 0 1 8 5"/>
+                        <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1"/>
+                    </svg>
+                    <span>Download Feedback</span>
+                </button>
+            </div>
         </div>
         <div class="logoutbutton" onclick="window.location.href='{% url 'adminlogout' %}'">
             <button id="logout-button" onclick="window.location.href='{% url 'adminlogout' %}'">
@@ -87,6 +96,48 @@
             </form>
         </div>
     </div>
+    <div class="overlay-container download"> 
+        <div id="downloadfeedback-container" class="form-container hidden">
+            <svg id="closebtn" class="close-btn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="hideDownloadFeedbackForm()">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+           <form method="post" id="downloadoverallreportform">
+                {% csrf_token %}
+                
+               <div class="form-row">
+                   <label for="year">Year</label>
+                   <select name="year" id="year" required style="height: auto;border-color: #000;">
+                       <option value="" disabled selected>Select a Year</option>
+                   </select>
+               </div>
+               <div class="form-row"  id="branch-container" style="display:none">
+                   <label for="branch">Branch</label>
+                  <select name="branch" id="branch" disabled required style="height: auto;border-color: #000;">
+                       <option value="" disabled selected>Select a Branch</option>
+                   </select>
+               </div>
+              <div class="form-row" id="section-container" style="display:none">
+                   <label for="section">Section</label>
+                    <select name="section" id="section" disabled required style="height: auto;border-color: #000;">
+                       <option value="" disabled selected>Select a Section</option>
+                   </select>
+               </div>
+               <div class="form-row">
+                   <label for="mid">Mid</label>
+                   <select name="mid" id="mid" style="height: auto;border-color: #000;">
+                       <option value="" selected disabled>Select Mid</option>
+                       <option value="1">Mid-1</option>
+                       <option value="2">Mid-2</option>
+                   </select>
+               </div>
+               <div class="button-container"> 
+                    <button type="submit" id="downloadfeedbackbtn" >Download</button>
+               </div>
+           </form>
+        </div>
+    </div>
     <div class="editfeedback" id="editfeedbackContainer" style="display: none;">
         <div id="editbutton"> 
             <span class="move-right" onclick="toggleSections()">
@@ -125,8 +176,31 @@
             
         </div>
     </div>
+    <div id="message-overlay">
+    </div>
 </main>
 <script>
+    function showDownloadFeedbackForm(){
+        document.getElementById('downloadfeedback-container').classList.remove('hidden');
+        document.querySelector('.overlay-container.download').style.display = 'block';
+        loadYears();
+    }
+    function hideDownloadFeedbackForm(){
+        document.getElementById('downloadfeedback-container').classList.add('hidden');
+        document.querySelector('.overlay-container.download').style.display = 'none';
+         const yearSelect = document.getElementById('year');
+        const branchContainer = document.getElementById('branch-container');
+        const branchSelect = document.getElementById('branch');
+        const sectionContainer = document.getElementById('section-container');
+        const sectionSelect = document.getElementById('section');
+        yearSelect.innerHTML = '<option value="" disabled selected>Select a Year</option>';
+        branchContainer.style.display = 'none';
+        branchSelect.disabled = true;
+        branchSelect.innerHTML = '<option value="" disabled selected>Select a Branch</option>';
+        sectionContainer.style.display = 'none';
+        sectionSelect.disabled = true;
+        sectionSelect.innerHTML = '<option value="" disabled selected>Select a Section</option>';
+    }
     function showfeedbackForm() {
         document.getElementById('addfeedbackform-container').classList.remove('hidden');
         document.querySelector('.overlay-container').style.display = 'block';
@@ -246,18 +320,17 @@
         .then(data => {
             hideSpinner();
         if (data.success) {
-            alert("Exam updated successfully!");
+            showMessage('Exam updated successfully.','success');
             getactivefeedbackexams();
             hideSpinner();
         } else {
-            alert("Failed to update exam. Please try again.");
-            hideSpinner();
+            showMessage(data.error,'error');
         }
         })
         .catch(error => {
             
         console.error('Error updating exam:', error);
-        alert("An error occurred while updating the exam.");
+        showMessage(data.error,'error');
         hideSpinner();
         });
     }
@@ -283,17 +356,15 @@
             .then(data => {
                 hideSpinner();
                 if (data.success) {
-                    alert("Exam deleted successfully!");
+                    showMessage('Deleted successfully.','delete');
                     getactivefeedbackexams();
-                    hideSpinner();
                 } else {
-                    alert("Failed to delete exam. Please try again.");
-                    hideSpinner();
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 console.error('Error deleting exam:', error); 
-                alert("An error occurred while deleting the exam.");
+                showMessage(data.error,'error');
                 hideSpinner();
             });
         }
@@ -319,24 +390,200 @@
         .then(data => {
             hideSpinner();
         if (data.success) {
-            
-            alert('Exam Created successfully.');
+            showMessage('Exam created successfully.','success');
             form.reset(); 
             document.querySelector('.overlay-container').style.display = 'none';
             getactivefeedbackexams(); 
-            hideSpinner();
         } else {
-            alert(data.error);
-            hideSpinner();
+            showMessage(data.error,'error');
         }
         })
         .catch(error => {
         console.error('Error adding Exam:', error);
-        alert('Error adding exam. Please try again later.');
+        showMessage(data.error,'error');
         hideSpinner();
         });
     });
+    function loadYears() {
+         showSpinner();
+         fetch('/getyears/', {
+             method: 'POST',
+             headers: {
+                 'Content-Type': 'application/json',
+                 'X-CSRFToken': getCookie('csrftoken')
+             }
+         })
+         .then(response => response.json())
+         .then(data => {
+            hideSpinner();
+             const yearSelect = document.getElementById('year');
+            yearSelect.innerHTML = '<option value="" disabled selected>Select a Year</option>';
+             data.forEach(year => {
+                 const option = document.createElement('option');
+                 option.value = year.year_number;
+                 option.textContent = `${year.year_number} Year - ${year.year_name}`;
+                 yearSelect.appendChild(option);
+             });
+         })
+         .catch(error => {
+             console.error('Error fetching years:', error);
+             showMessage('Error loading years.','error');
+             hideSpinner();
+         });
+     }
+     document.getElementById('year').addEventListener('change', function() {
+        const selectedYear = this.value;
+        const branchContainer = document.getElementById('branch-container');
+        const branchSelect = document.getElementById('branch');
+        const sectionContainer = document.getElementById('section-container');
+        const sectionSelect = document.getElementById('section');
+        if (selectedYear) {
+              showSpinner();
+              fetch('/getbranches/', {
+                 method: 'POST',
+                 headers: {
+                     'Content-Type': 'application/json',
+                     'X-CSRFToken': getCookie('csrftoken')
+                     },
+                     body: JSON.stringify({ year_number: selectedYear })
+             })
+             .then(response => response.json())
+             .then(data => {
+                hideSpinner();
+                branchContainer.style.display = 'flex';
+                branchSelect.disabled = false;
+                branchSelect.innerHTML = '<option value="" disabled selected>Select a Branch</option>';
+                if (data.length === 0) {
+                    branchSelect.innerHTML = '<option value="" disabled selected>No Branches found</option>';
+                }
+                else{
+                    data.forEach(branch => {
+                        const option = document.createElement('option');
+                        option.value = branch.code;
+                        option.textContent = `${branch.name} (${branch.code})`;
+                        branchSelect.appendChild(option);
+                    });
+                 }
 
+             })
+              .catch(error => {
+                console.error('Error fetching branches:', error);
+                showMessage('Error fetching branches.','error')
+                 hideSpinner();
+             });
+        } else {
+            branchContainer.style.display = 'none';
+            branchSelect.disabled = true;
+            branchSelect.innerHTML = '<option value="" disabled selected>Select a Branch</option>';
+             sectionContainer.style.display = 'none';
+             sectionSelect.disabled = true;
+            sectionSelect.innerHTML = '<option value="" disabled selected>Select a Section</option>';
+        }
+});
+
+    document.getElementById('branch').addEventListener('change', function() {
+        const selectedBranch = this.value;
+        const sectionContainer = document.getElementById('section-container');
+        const sectionSelect = document.getElementById('section');
+        const selectedYear = document.getElementById('year').value; 
+
+        if(selectedBranch){
+            showSpinner();
+            fetch('/getsections/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ branch_code: selectedBranch,year_number: selectedYear })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideSpinner();
+                sectionContainer.style.display = 'flex';
+                 sectionSelect.disabled = false;
+                sectionSelect.innerHTML = '<option value="" disabled selected>Select a Section</option>';
+                if (data.length === 0) {
+                    sectionSelect.innerHTML = '<option value="" disabled selected>No Sections found</option>';
+                }
+                else {
+                   data.forEach(section => {
+                        const option = document.createElement('option');
+                        option.value = section.section_number;
+                        option.textContent = section.section_name;
+                        sectionSelect.appendChild(option);
+                    });
+                 }
+            })
+             .catch(error => {
+                 console.error('Error fetching sections:', error);
+                showMessage('Error fetching sections','error')
+                hideSpinner();
+             });
+            }
+        else {
+            sectionContainer.style.display = 'none';
+            sectionSelect.disabled = true;
+            sectionSelect.innerHTML = '<option value="" disabled selected>Select a Section</option>';
+        }
+
+    });
+    document.getElementById('downloadoverallreportform').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const selected_mid = document.getElementById('mid').value; 
+        const selectedYear = document.getElementById('year').value;
+        const selectedBranch = document.getElementById('branch').value;
+        const selectedSection = document.getElementById('section').value;
+
+        const yearNumber = selectedYear;
+        const branchCode = selectedBranch;
+        const sectionNumber = selectedSection;
+
+
+        showSpinner();
+        fetch('/downloadoverallreport/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                'year_number': yearNumber,
+                'branch_code': branchCode,
+                'section_number': sectionNumber,
+                'selected_mid': selected_mid
+            })
+        })
+            .then(response => {
+                hideSpinner();
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const contentDisposition = response.headers.get('Content-Disposition');
+                const filename = contentDisposition.split('filename=')[1].replace(/['"]/g, '');
+                return response.blob().then(blob => ({ blob, filename }));
+
+            })
+            .then(({ blob, filename }) => {
+                hideSpinner();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                hideDownloadFeedbackForm();
+            })
+            .catch(error => {
+                console.error('Error downloading report:', error);
+                showMessage('An error occurred.','warning');
+                hideSpinner();
+            });
+    });
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

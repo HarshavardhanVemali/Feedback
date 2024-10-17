@@ -129,11 +129,17 @@
             </tr>
         </thead>
         <tbody>
+            {% if comments_data %}
             {% for comment in comments_data %}
                 <tr>
                     <td>{{ comment.comment|default_if_none:"" }}</td> 
                 </tr>
             {% endfor %}
+            {% else %}
+                <tr>
+                    <td>No comments.</td> 
+                </tr>
+            {% endif %}
         </tbody>
     </table>
 </body>

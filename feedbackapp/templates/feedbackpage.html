@@ -73,17 +73,7 @@
     </style>
 </head>
 <body>
-    <div id="college_title_feedback">
-        <div id="college_logo_feedback">
-            <a href="https://www.mvgrce.com/" target="_blank">
-                <img src="{% static 'images/college_logo.png' %}" alt="college_logo">
-            </a>
-        </div>
-        <div id="college_sub_title_feedback">
-            <h1>Maharaj Vijayaram Gajapathi Raj College of Engineering (Autonomous)</h1>
-            <h1 id="title_name_feedback">Feedback Management</h1>
-        </div>
-    </div>
+    
     <main>
         <div class="subject-details"></div>
         <div id="feedback-content">
@@ -99,9 +89,12 @@
         </div>
         <div class="loading-spinner"></div> 
         <div class="background-stars"></div>
+        <div id="message-overlay">
+        </div>
     </main>
      
 </body>
+
 <script src="https://unpkg.com/aos@next/dist/aos.js"></script> <script>
     document.addEventListener('DOMContentLoaded', () => {
         getQuestions();
@@ -178,7 +171,7 @@
             const loadQuestionsDiv = document.querySelector('.loadquestions');
             const loadingSpinner = document.querySelector('.loading-spinner'); 
             const feedbackContent = document.getElementById('feedback-content'); 
-
+            
             if (data.success) {
                 const questions = data.questions;
 
@@ -221,7 +214,7 @@
         })
         .catch(error => {
             console.error('Error fetching questions:', error);
-            alert('An error occurred while fetching questions.');
+            showMessage('An error occured.','warning');
         });
     }
 
@@ -264,15 +257,15 @@
                 if (data.success) {
                     window.location.href = '/';
                 } else {
-                    alert(data.error);
+                    showMessage(data.error,'error');
                 }
             })
             .catch(error => {
                 console.error('Error submitting feedback:', error);
-                alert('An error occurred while submitting feedback.');
+                showMessage('An error occured.','warning');
             });
         } else {
-            alert("Please answer all the questions before submitting.");
+            showMessage('Answer all questions','warning');
         }
     }
     function getCookie(name) {

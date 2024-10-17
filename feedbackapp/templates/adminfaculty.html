@@ -97,6 +97,8 @@
         <p>Departments</p>
         <div id="departments"></div>
     </div>
+    <div id="message-overlay">
+    </div>
 </main>
 <script>
     function showAddFacultyForm() {
@@ -163,19 +165,17 @@
         .then(data => {
             hideSpinner();
             if (data.success) {
-                alert('Faculty added successfully.');
+                showMessage('Faculty added successfully.','success');
                 form.reset();
-                hideSpinner();
                 document.querySelector('.overlay').classList.remove('active');
             } else {
-                alert('Failed to add Faculty: ' + data.error);
-                hideSpinner();
+                showMessage(data.error,'warning');
             }
         })
         .catch(error => {
             hideSpinner();
             console.error('Error adding faculty:', error);
-            alert('Error adding faculty Please try again later.');
+            showMessage('An error occured.','warning');
         });
     });
     function redirectToFacultyPage(departmentCode) {
